@@ -133,8 +133,13 @@ public class ModMenuIntegration implements ModMenuApi {
                 .build());
 
             transitions.addEntry(entry
-                .startEnumSelector(Component.literal("Transition Type"), ZoomTransition.Type.class, cfg.transitionType)
+                .startSelector(
+                    Component.literal("Transition Type"),
+                    ZoomTransition.getSelectableTypes(),
+                    cfg.transitionType
+                )
                 .setDefaultValue(ZoomTransition.Type.SMOOTHSTEP)
+                .setNameProvider(val -> Component.literal(val.getDisplayName()))
                 .setTooltip(Component.literal("Easing curve type for the zoom transition."))
                 .setSaveConsumer(val -> cfg.transitionType = val)
                 .build());
@@ -204,6 +209,13 @@ public class ModMenuIntegration implements ModMenuApi {
                 .setTooltip(Component.literal("Display rangefinder distance and localized name of the targeted block/entity under the crosshair."))
                 .setSaveConsumer(val -> cfg.showTelemetryHud = val)
                 .build());
+
+            hudGroup.add(entry
+                .startColorField(Component.literal("Zoom HUD Text Color"), cfg.zoomHudColor)
+                .setDefaultValue(0xFFFFFF)
+                .setTooltip(Component.literal("Color of the text displayed in the zoom HUD overlay."))
+                .setSaveConsumer(val -> cfg.zoomHudColor = val)
+                .build());
             visuals.addEntry(hudGroup.build());
 
             // Subcategory: Zoom Screen Effects
@@ -214,6 +226,14 @@ public class ModMenuIntegration implements ModMenuApi {
                 .setYesNoTextSupplier(bool -> bool ? Component.literal("ON") : Component.literal("OFF"))
                 .setTooltip(Component.literal("Highlight the targeted entity under your crosshair with a client-side glowing outline effect."))
                 .setSaveConsumer(val -> cfg.highlightTargetEntity = val)
+                .build());
+
+            effectsGroup.add(entry
+                .startBooleanToggle(Component.literal("Hide Hotbar during Zoom"), cfg.hideHotbar)
+                .setDefaultValue(false)
+                .setYesNoTextSupplier(bool -> bool ? Component.literal("ON") : Component.literal("OFF"))
+                .setTooltip(Component.literal("Hide the hotbar and other HUD elements when zoom is active."))
+                .setSaveConsumer(val -> cfg.hideHotbar = val)
                 .build());
 
             effectsGroup.add(entry

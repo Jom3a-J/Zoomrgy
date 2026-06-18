@@ -33,7 +33,50 @@ public class ZoomTransition {
         CIRCULAR,
         BACK,
         ELASTIC,
-        BOUNCE
+        BOUNCE;
+
+        /**
+         * Returns a human-readable display name for this transition type.
+         */
+        public String getDisplayName() {
+            return switch (this) {
+                case INSTANT -> "Instant";
+                case LINEAR -> "Linear";
+                case EASE_IN_SINE -> "Ease In (Sine)";
+                case EASE_OUT_SINE -> "Ease Out (Sine)";
+                case EASE_IN_OUT_SINE -> "Ease In-Out (Sine)";
+                case EASE_IN_QUAD -> "Ease In (Quadratic)";
+                case EASE_OUT_QUAD -> "Ease Out (Quadratic)";
+                case EASE_IN_OUT_QUAD -> "Ease In-Out (Quadratic)";
+                case EASE_IN_CUBIC -> "Ease In (Cubic)";
+                case EASE_OUT_CUBIC -> "Ease Out (Cubic)";
+                case EASE_IN_OUT_CUBIC -> "Ease In-Out (Cubic)";
+                case EASE_IN_EXPONENTIAL -> "Ease In (Exponential)";
+                case EASE_OUT_EXPONENTIAL -> "Ease Out (Exponential)";
+                case EASE_IN_OUT_EXPONENTIAL -> "Ease In-Out (Exponential)";
+                case SMOOTHSTEP -> "Smoothstep";
+                case CIRCULAR -> "Circular";
+                case BACK -> "Back (Overshoot)";
+                case ELASTIC -> "Elastic";
+                case BOUNCE -> "Bounce";
+                default -> name(); // Deprecated types fallback to raw name
+            };
+        }
+    }
+
+    /**
+     * Returns only the non-deprecated transition types for use in config GUIs.
+     */
+    public static Type[] getSelectableTypes() {
+        return java.util.Arrays.stream(Type.values())
+            .filter(t -> {
+                try {
+                    return !Type.class.getField(t.name()).isAnnotationPresent(Deprecated.class);
+                } catch (NoSuchFieldException e) {
+                    return true;
+                }
+            })
+            .toArray(Type[]::new);
     }
 
     /**

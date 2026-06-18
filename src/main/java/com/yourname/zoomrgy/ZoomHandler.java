@@ -21,12 +21,10 @@ public class ZoomHandler {
         double current = ZoomState.currentZoom;
         double speed = ZoomConfig.get().zoomSpeed;
 
-        // Smooth interpolation (lerp)
-        ZoomState.currentZoom = lerp(current, target, speed);
-
-        // Snap to exact value when close enough to avoid floating drift
-        if (Math.abs(ZoomState.currentZoom - target) < 0.001) {
-            ZoomState.currentZoom = target;
+        if (current < target) {
+            ZoomState.currentZoom = Math.min(target, current + speed);
+        } else if (current > target) {
+            ZoomState.currentZoom = Math.max(target, current - speed);
         }
     }
 

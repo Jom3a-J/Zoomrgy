@@ -16,7 +16,7 @@ public abstract class MouseScrollMixin {
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true, require = 1)
     private void onScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
-        if (!ZoomState.isZooming) return;
+        if (!(ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) return;
 
         ZoomConfig.Config cfg = ZoomConfig.get();
         int maxLevel = cfg.maxScrollLevel; // e.g. 10

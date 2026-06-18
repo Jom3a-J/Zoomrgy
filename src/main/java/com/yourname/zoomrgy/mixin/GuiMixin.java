@@ -6,7 +6,7 @@ import com.yourname.zoomrgy.ZoomTransition;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.DeltaTracker;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
-@Mixin(Gui.class)
+@Mixin(Hud.class)
 public abstract class GuiMixin {
 
     private static final net.minecraft.resources.Identifier VIGNETTE_TEXTURE = 
@@ -28,14 +28,14 @@ public abstract class GuiMixin {
 
     @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"), cancellable = true, require = 1)
     private void onExtractHotbarAndDecorations(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isSpyglassActive) {
+        if (ZoomConfig.get().hideHotbar && (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "extractItemHotbar", at = @At("HEAD"), cancellable = true, require = 1)
     private void onExtractItemHotbar(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isSpyglassActive) {
+        if (ZoomConfig.get().hideHotbar && (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) {
             ci.cancel();
         }
     }
@@ -73,7 +73,7 @@ public abstract class GuiMixin {
         if (renderZoom <= 0.0) return;
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.options.hideGui || mc.player == null) return;
+        if (mc.gui.hud.isHidden() || mc.player == null) return;
 
         int width = extractor.guiWidth();
         int height = extractor.guiHeight();
@@ -88,16 +88,17 @@ public abstract class GuiMixin {
         double multiplier = (double) originalFov / currentFov;
         
         // Calculate compass direction
+        // Minecraft yaw: 0=S, 90=W, 180=N, 270=E
         float yaw = mc.player.getYRot();
         float degrees = (yaw % 360.0f + 360.0f) % 360.0f;
-        String dir = "N";
-        if (degrees >= 22.5f && degrees < 67.5f) dir = "NE";
-        else if (degrees >= 67.5f && degrees < 112.5f) dir = "E";
-        else if (degrees >= 112.5f && degrees < 157.5f) dir = "SE";
-        else if (degrees >= 157.5f && degrees < 202.5f) dir = "S";
-        else if (degrees >= 202.5f && degrees < 247.5f) dir = "SW";
-        else if (degrees >= 247.5f && degrees < 292.5f) dir = "W";
-        else if (degrees >= 292.5f && degrees < 337.5f) dir = "NW";
+        String dir = "S";
+        if (degrees >= 22.5f && degrees < 67.5f) dir = "SW";
+        else if (degrees >= 67.5f && degrees < 112.5f) dir = "W";
+        else if (degrees >= 112.5f && degrees < 157.5f) dir = "NW";
+        else if (degrees >= 157.5f && degrees < 202.5f) dir = "N";
+        else if (degrees >= 202.5f && degrees < 247.5f) dir = "NE";
+        else if (degrees >= 247.5f && degrees < 292.5f) dir = "E";
+        else if (degrees >= 292.5f && degrees < 337.5f) dir = "SE";
         
         String compassString = String.format(java.util.Locale.US, "%.0f° %s", degrees, dir);
         String label = String.format(java.util.Locale.US, "%.1fx  |  %s", multiplier, compassString);

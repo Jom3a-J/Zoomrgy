@@ -5,7 +5,7 @@
   "name": "Zoomrgy",
   "icon": "assets/zoomrgy/icon.png",
   "description": "A fully-featured, highly configurable zoom mod for Minecraft. Features ultra-smooth transitions (Smith Zoom) with adjustable speeds and customizable easing curves (Linear, Ease In, Ease Out, Ease In-Out, and Smoothstep). Control your zoom level dynamically using your scroll wheel, customize your preferences via the Mod Menu interface, and save your custom profiles automatically. Default keybind: C.",
-  "authors": ["YourName"],
+  "authors": ["Jom3a"],
   "contact": {},
   "license": "MIT",
   "environment": "client",
@@ -21,10 +21,10 @@
     "zoomrgy.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.19.2",
-    "minecraft": "~26.1.2",
+    "fabricloader": ">=0.19.3",
+    "minecraft": ">=26.2",
     "java": ">=25",
-    "fabric-api": ">=0.150.0"
+    "fabric-api": ">=0.152.0"
   },
   "suggests": {
     "modmenu": "*"

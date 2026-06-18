@@ -88,7 +88,7 @@ public class ZoomConfig {
         @Deprecated
         public double  zoomedFov             = 15.0;
         public double  zoomSpeed             = 0.1;
-        public ZoomTransition.Type transitionType = ZoomTransition.Type.SMOOTHSTEP;
+        public ZoomTransition.Type transitionType = ZoomTransition.Type.EASE_IN_OUT_SINE;
 
         @Deprecated
         public double  zoomInSpeed           = 0.1;
@@ -115,8 +115,9 @@ public class ZoomConfig {
         public boolean zoomHudBackground     = true;
         public int     zoomHudColor          = 0xFFFFFF;
         public boolean reduceFog             = true;
-        public double  zoomVignetteOpacity   = 0.4;
+        public double  zoomVignetteOpacity   = 0.0;
         public boolean hideCrosshair         = false;
+        public boolean hideHotbar            = false;
         public boolean zoomOutOnDamage       = true;
         public boolean spyglassScopeOverlay   = false;
         public boolean scrollAudioFeedback   = true;
