@@ -25,6 +25,17 @@ loom {
 	}
 }
 
+// Creates the "gametest" source set and the `clientGameTest` task, which drives a real
+// client through the tests in src/gametest and fails the build on assertion errors.
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "zoomrgy-test"
+		enableGameTests = false
+		enableClientGameTests = true
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	// Minecraft 26.2 ships de-obfuscated, so there is no mappings dependency and no remap
