@@ -27,20 +27,22 @@ loom {
 
 dependencies {
 	// To change the versions see the gradle.properties file
+	// Minecraft 26.2 ships de-obfuscated, so there is no mappings dependency and no remap
+	// step - the official names the sources use are also the names at runtime.
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	
+
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// Cloth Config (for the config screen)
-	implementation("me.shedaniel.cloth:cloth-config-fabric:26.1.154") {
+	// Cloth Config (for the config screen) - must match the target Minecraft version
+	implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
 	// Mod Menu
-	compileOnly "com.terraformersmc:modmenu:18.0.0-beta.1"
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {

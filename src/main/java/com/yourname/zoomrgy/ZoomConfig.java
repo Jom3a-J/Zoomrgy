@@ -12,13 +12,21 @@ import java.nio.file.Path;
 @Environment(EnvType.CLIENT)
 public class ZoomConfig {
 
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Zoomrgy.MOD_ID);
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH =
         FabricLoader.getInstance().getConfigDir().resolve("zoomrgy.json");
 
+    /** Pristine defaults, used by the config screen so "reset to default" matches a fresh install. */
+    private static final Config DEFAULTS = new Config();
+
     private static Config instance = new Config();
 
     public static Config get() { return instance; }
+
+    /** Read-only view of the built-in defaults. Never mutate the returned instance. */
+    public static Config defaults() { return DEFAULTS; }
 
     public static void load() {
         if (CONFIG_PATH.toFile().exists()) {
@@ -70,18 +78,54 @@ public class ZoomConfig {
                 if (instance.spyglassZoomFov != 7.0 && instance.spyglassZoomMultiplier == 10.0) {
                     instance.spyglassZoomMultiplier = Math.round((70.0 / instance.spyglassZoomFov) * 10.0) / 10.0;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                // Malformed JSON throws JsonSyntaxException (unchecked) - letting that escape
+                // onInitializeClient would hard-crash the game on startup. Fall back to defaults
+                // and leave the broken file alone so the user can still repair it by hand.
+                LOGGER.error("Failed to read {}, falling back to default settings", CONFIG_PATH, e);
+                instance = new Config();
             }
         }
+        sanitize();
     }
 
     public static void save() {
         try (Writer writer = new FileWriter(CONFIG_PATH.toFile())) {
             GSON.toJson(instance, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.error("Failed to write {}", CONFIG_PATH, e);
         }
+    }
+
+    /**
+     * Forces every value into the range the config screen exposes. Guards against
+     * hand-edited files and against the FOV migrations above producing nonsense
+     * (a zoomed FOV of 0 in an old config yields an infinite multiplier), either of
+     * which would divide the rendered FOV down to zero, NaN or infinity.
+     */
+    public static void sanitize() {
+        Config c = instance;
+
+        // Gson deserialises an unrecognised enum name to null rather than failing.
+        c.transitionType = c.transitionType == null
+            ? DEFAULTS.transitionType
+            : ZoomTransition.normalize(c.transitionType);
+
+        c.zoomSpeed             = sane(c.zoomSpeed,             0.05, 1.00, DEFAULTS.zoomSpeed);
+        c.zoomMultiplier        = sane(c.zoomMultiplier,        1.5,  20.0, DEFAULTS.zoomMultiplier);
+        c.zoomMultiplierPreset2 = sane(c.zoomMultiplierPreset2, 2.0,  50.0, DEFAULTS.zoomMultiplierPreset2);
+        c.spyglassZoomMultiplier= sane(c.spyglassZoomMultiplier,2.0,  35.0, DEFAULTS.spyglassZoomMultiplier);
+        c.cinematicSmoothness   = sane(c.cinematicSmoothness,   0.0,  0.95, DEFAULTS.cinematicSmoothness);
+        c.movementFovDamping    = sane(c.movementFovDamping,    0.0,  1.00, DEFAULTS.movementFovDamping);
+        c.zoomVignetteOpacity   = sane(c.zoomVignetteOpacity,   0.0,  1.00, DEFAULTS.zoomVignetteOpacity);
+
+        c.maxScrollLevel = Math.max(1, Math.min(20, c.maxScrollLevel));
+        c.zoomHudColor  &= 0xFFFFFF;
+    }
+
+    private static double sane(double value, double min, double max, double fallback) {
+        if (!Double.isFinite(value)) return fallback;
+        return Math.max(min, Math.min(max, value));
     }
 
     public static class Config {

@@ -80,11 +80,31 @@ public class ZoomTransition {
     }
 
     /**
+     * Maps legacy/deprecated types onto their modern equivalents, and null onto a safe
+     * default. Configs written by older versions (or hand-edited with a bad name, which
+     * Gson silently deserialises to null) would otherwise blow up or fall out of the
+     * selector list in the config screen.
+     */
+    public static Type normalize(Type type) {
+        if (type == null) return Type.SMOOTHSTEP;
+        return switch (type) {
+            case EASE_IN -> Type.EASE_IN_QUAD;
+            case EASE_OUT -> Type.EASE_OUT_QUAD;
+            case EASE_IN_OUT -> Type.EASE_IN_OUT_QUAD;
+            case SINE -> Type.EASE_IN_OUT_SINE;
+            case EXPONENTIAL -> Type.EASE_IN_OUT_EXPONENTIAL;
+            default -> type;
+        };
+    }
+
+    /**
      * Apply an easing curve to a raw linear progress value t ∈ [0, 1].
+     * Note that BACK and ELASTIC deliberately overshoot, so the result is not
+     * guaranteed to stay within [0, 1].
      */
     public static double apply(double t, Type type) {
         t = Math.max(0.0, Math.min(1.0, t)); // clamp
-        return switch (type) {
+        return switch (normalize(type)) {
             case INSTANT                -> t > 0.0 ? 1.0 : 0.0;
             case LINEAR                 -> t;
             

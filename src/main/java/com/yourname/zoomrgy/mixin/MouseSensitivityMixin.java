@@ -27,10 +27,16 @@ public abstract class MouseSensitivityMixin {
         net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
         double targetFov = ZoomState.getTargetFov();
+        if (baseFov <= 0.0) return;
         double fovRatio = targetFov / baseFov;
 
-        // Multiply the inputs by the fovRatio, scaled by currentZoom
-        double scale = 1.0 + (fovRatio - 1.0) * ZoomState.currentZoom;
+        // Follow the same easing curve the FOV itself uses. Scaling by the raw linear ramp
+        // instead would desync sensitivity from what you actually see mid-transition - badly
+        // so for the exponential and elastic curves.
+        double eased = com.yourname.zoomrgy.ZoomTransition.apply(
+            ZoomState.currentZoom, ZoomConfig.get().transitionType);
+
+        double scale = Math.max(0.01, 1.0 + (fovRatio - 1.0) * eased);
 
         args.set(0, originalX * scale);
         args.set(1, originalY * scale);

@@ -57,7 +57,7 @@ public abstract class CameraMixin {
             ZoomState.targetedEntity = null;
         }
 
-        info.setReturnValue(zoomrgy$lerp(startFov, targetFov, t));
+        info.setReturnValue(zoomrgy$safeFov(zoomrgy$lerp(startFov, targetFov, t)));
     }
 
     @Inject(method = "calculateHudFov", at = @At("RETURN"), cancellable = true, require = 1)
@@ -77,7 +77,17 @@ public abstract class CameraMixin {
         ZoomTransition.Type transitionType = cfg.transitionType;
         float t = (float) ZoomTransition.apply(renderZoom, transitionType);
 
-        info.setReturnValue(zoomrgy$lerp(original, targetFov, t));
+        info.setReturnValue(zoomrgy$safeFov(zoomrgy$lerp(original, targetFov, t)));
+    }
+
+    /**
+     * The BACK and ELASTIC curves overshoot past 1.0, which at high magnification pushes the
+     * interpolated FOV straight through zero into negative territory and breaks the projection
+     * matrix. Clamp to something small but still valid.
+     */
+    private static float zoomrgy$safeFov(float fov) {
+        if (!Float.isFinite(fov)) return 1.0f;
+        return Math.max(0.1f, Math.min(179.0f, fov));
     }
 
     private static float zoomrgy$lerp(float a, float b, float t) {

@@ -83,7 +83,9 @@ public abstract class GuiMixin {
 
         ZoomTransition.Type transitionType = cfg.transitionType;
         float t = (float) ZoomTransition.apply(renderZoom, transitionType);
-        float currentFov = zoomrgy$lerp(originalFov, targetFov, t);
+        // Matches the clamp in CameraMixin - overshooting curves can otherwise drive this to
+        // zero or below and print "Infinityx" / a negative magnification.
+        float currentFov = Math.max(0.1f, zoomrgy$lerp(originalFov, targetFov, t));
 
         double multiplier = (double) originalFov / currentFov;
         

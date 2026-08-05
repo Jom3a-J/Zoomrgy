@@ -17,6 +17,7 @@ public class ModMenuIntegration implements ModMenuApi {
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         return parent -> {
             ZoomConfig.Config cfg = ZoomConfig.get();
+            ZoomConfig.Config def = ZoomConfig.defaults();
             ConfigBuilder builder = ConfigBuilder.create()
                     .setParentScreen(parent)
                     .setTitle(Component.literal("Zoomrgy Configuration"));
@@ -136,9 +137,11 @@ public class ModMenuIntegration implements ModMenuApi {
                 .startSelector(
                     Component.literal("Transition Type"),
                     ZoomTransition.getSelectableTypes(),
-                    cfg.transitionType
+                    // Must be one of the selectable values - a legacy type from an older
+                    // config is not in that array and would leave the selector on index -1.
+                    ZoomTransition.normalize(cfg.transitionType)
                 )
-                .setDefaultValue(ZoomTransition.Type.SMOOTHSTEP)
+                .setDefaultValue(def.transitionType)
                 .setNameProvider(val -> Component.literal(val.getDisplayName()))
                 .setTooltip(Component.literal("Easing curve type for the zoom transition."))
                 .setSaveConsumer(val -> cfg.transitionType = val)
@@ -238,7 +241,7 @@ public class ModMenuIntegration implements ModMenuApi {
 
             effectsGroup.add(entry
                 .startIntSlider(Component.literal("Zoom Vignette Opacity"), (int) (cfg.zoomVignetteOpacity * 100), 0, 100)
-                .setDefaultValue(40)
+                .setDefaultValue((int) (def.zoomVignetteOpacity * 100))
                 .setTextGetter(val -> Component.literal(val + "%"))
                 .setTooltip(Component.literal("Opacity of the dark vignette border when zoomed. Set to 0% to disable."))
                 .setSaveConsumer(val -> cfg.zoomVignetteOpacity = val / 100.0)
@@ -271,7 +274,10 @@ public class ModMenuIntegration implements ModMenuApi {
 
             visuals.addEntry(effectsGroup.build());
 
-            builder.setSavingRunnable(ZoomConfig::save);
+            builder.setSavingRunnable(() -> {
+                ZoomConfig.sanitize();
+                ZoomConfig.save();
+            });
             return builder.build();
         };
     }

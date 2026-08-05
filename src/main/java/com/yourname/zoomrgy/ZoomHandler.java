@@ -9,12 +9,35 @@ public class ZoomHandler {
 
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player == null) return;
+            // The cache is only ever valid for a single render frame; dropping it every tick
+            // also releases the entity (and through it, the whole level) it holds on to.
+            clearRaycastCache();
+
+            if (client.player == null || client.level == null) {
+                resetZoom();
+                return;
+            }
             tickZoom();
         });
     }
 
+    /**
+     * Snaps the interpolated zoom back to "not zoomed". Without this, leaving a world while
+     * zoomed leaves currentZoom at 1.0, so the next world you join renders fully zoomed in
+     * and then animates back out.
+     */
+    private static void resetZoom() {
+        ZoomState.currentZoom = 0.0;
+        ZoomState.lastZoom = 0.0;
+        ZoomState.targetedEntity = null;
+    }
+
     private static void tickZoom() {
+        // Keep the scroll level in range - lowering maxScrollLevel in the config screen
+        // would otherwise leave a previously scrolled level stuck above the new maximum.
+        int maxLevel = Math.max(1, ZoomConfig.get().maxScrollLevel);
+        ZoomState.scrollLevel = Math.max(1, Math.min(maxLevel, ZoomState.scrollLevel));
+
         ZoomState.lastZoom = ZoomState.currentZoom;
 
         double target = ZoomState.getTargetZoom();
@@ -37,8 +60,19 @@ public class ZoomHandler {
         return from + (to - from) * factor;
     }
 
+    /** Drops the cached hit result so it cannot keep a stale entity or level alive. */
+    public static void clearRaycastCache() {
+        lastStartPos = null;
+        lastLookVec = null;
+        lastMaxDistance = 0.0;
+        cachedHitResult = null;
+    }
+
     public static net.minecraft.world.phys.HitResult customRaycast(net.minecraft.client.Minecraft client, double maxDistance, float partialTicks) {
-        if (client.player == null || client.level == null) return null;
+        if (client.player == null || client.level == null) {
+            clearRaycastCache();
+            return null;
+        }
 
         net.minecraft.world.phys.Vec3 startPos = client.player.getEyePosition(partialTicks);
         net.minecraft.world.phys.Vec3 lookVec = client.player.getViewVector(partialTicks);

@@ -16,6 +16,13 @@ public abstract class MouseScrollMixin {
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true, require = 1)
     private void onScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
+        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+
+        // A locked (or toggled) zoom stays active while a screen is open, so without this the
+        // mod would swallow scrolling in the inventory, creative tabs and chat history.
+        if (client.player == null) return;
+        if (client.gui.screen() != null || client.gui.overlay() != null) return;
+
         if (!(ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) return;
 
         ZoomConfig.Config cfg = ZoomConfig.get();
@@ -29,7 +36,7 @@ public abstract class MouseScrollMixin {
         }
 
         if (ZoomState.scrollLevel != prev && cfg.scrollAudioFeedback) {
-            net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
+            client.getSoundManager().play(
                 net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                     net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.6f
                 )

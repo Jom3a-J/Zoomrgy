@@ -95,6 +95,11 @@ public class ZoomKeyBindings {
                 while (ZOOM_KEY.consumeClick()) {}
                 while (ZOOM_PRESET_2_KEY.consumeClick()) {}
                 while (ZOOM_LOCK_KEY.consumeClick()) {}
+                // Keep the edge-detection state in step with reality, otherwise a key held
+                // through the damage window looks like it was never re-pressed afterwards
+                // and the next double-tap is silently dropped.
+                wasPressing = ZOOM_KEY.isDown();
+                wasPressingPreset2 = ZOOM_PRESET_2_KEY.isDown();
             } else if (cfg.zoomToggleMode) {
                 while (ZOOM_KEY.consumeClick()) {
                     ZoomState.isZooming = !ZoomState.isZooming;
