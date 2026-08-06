@@ -16,8 +16,19 @@ public class ZoomHandler {
 
             if (client.player == null || client.level == null) {
                 resetZoom();
+                inWorldTicks = 0;
                 return;
             }
+
+            // Grab the config screen's preview picture from ordinary play, once the world has had
+            // a moment to render. Doing it when the screen opens would capture the menu instead,
+            // since the GUI is drawn into the same render target as the world.
+            if (client.gui.screen() == null) {
+                if (++inWorldTicks == PREVIEW_CAPTURE_DELAY_TICKS) {
+                    ZoomPreviewImage.captureIfMissing();
+                }
+            }
+
             tickZoom();
         });
     }
@@ -29,6 +40,11 @@ public class ZoomHandler {
      */
     /** Set while a zoom is engaged, so the scroll reset fires once per release, not every tick. */
     private static boolean scrollResetPending = false;
+
+    /** Long enough for terrain to be drawn before the preview picture is taken. */
+    private static final int PREVIEW_CAPTURE_DELAY_TICKS = 80;
+
+    private static int inWorldTicks = 0;
 
     private static void resetZoom() {
         ZoomState.currentZoom = 0.0;

@@ -45,14 +45,28 @@ public final class ZoomPreviewImage {
     private ZoomPreviewImage() {
     }
 
+    /** Set once we have tried to grab a picture this session, successfully or not. */
+    private static boolean captureAttempted;
+
     /**
-     * Makes sure an image is available, reading the stored one or taking a new one if there is
-     * none yet. Cheap to call repeatedly; the work happens at most once.
+     * Makes the stored picture available to the config screen. Only ever reads from disk - taking
+     * a picture here would capture the menu that is already on screen, since the GUI is drawn into
+     * the same render target as the world.
      */
     public static void ensureAvailable() {
         if (texture != null || capturePending) return;
+        loadFromDisk();
+    }
 
-        if (loadFromDisk()) return;
+    /**
+     * Takes the picture, if there is not one already. Must be called while in a world with no
+     * screen open, otherwise the grab catches whatever menu is being displayed.
+     */
+    public static void captureIfMissing() {
+        if (captureAttempted || capturePending || texture != null) return;
+        captureAttempted = true;
+
+        if (Files.isRegularFile(IMAGE_PATH)) return;
 
         capture();
     }
