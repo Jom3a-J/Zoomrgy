@@ -42,7 +42,7 @@ public abstract class CameraMixin {
         }
 
         // Apply transition easing
-        ZoomTransition.Type transitionType = cfg.transitionType;
+        ZoomTransition.Type transitionType = ZoomState.activeTransition();
         float t = (float) ZoomTransition.apply(renderZoom, transitionType);
 
         // Update targeted entity on render frame for smooth glowing outline
@@ -75,7 +75,7 @@ public abstract class CameraMixin {
         float targetFov = (float) ZoomState.getTargetFov();
 
         // Apply transition easing
-        ZoomTransition.Type transitionType = cfg.transitionType;
+        ZoomTransition.Type transitionType = ZoomState.activeTransition();
         float t = (float) ZoomTransition.apply(renderZoom, transitionType);
 
         info.setReturnValue(zoomrgy$safeFov(zoomrgy$lerp(original, targetFov, t)));

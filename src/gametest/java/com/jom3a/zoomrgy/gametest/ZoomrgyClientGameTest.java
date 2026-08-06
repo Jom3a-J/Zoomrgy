@@ -39,6 +39,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             testScrollIgnoredWhileScreenOpen(context);
             testFovStaysPositiveWithOvershootEasing(context);
             testHudRendersAtEveryAnchor(context);
+            testInAndOutUseTheirOwnSettings(context);
             testReleaseDoesNotSnapOutward(context);
 
             // Deliberately leave the world at full zoom - see the assertion below.
@@ -409,6 +410,59 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
                 ZoomState.resetScrollLevels();
             });
             context.waitTicks(25); // let the zoom settle back out
+        }
+    }
+
+    /**
+     * The inward and outward legs must use their own curve and speed. Sharing one setting for
+     * both is what the separate in/out options exist to undo, so a difference has to actually
+     * reach the code that drives the transition.
+     */
+    private void testInAndOutUseTheirOwnSettings(ClientGameTestContext context) {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+
+        ZoomTransition.Type in = cfg.transitionType;
+        ZoomTransition.Type out = cfg.transitionTypeOut;
+        double speedIn = cfg.zoomSpeed;
+        double speedOut = cfg.zoomSpeedOut;
+
+        try {
+            context.runOnClient(mc -> {
+                cfg.transitionType = ZoomTransition.Type.LINEAR;
+                cfg.transitionTypeOut = ZoomTransition.Type.EASE_OUT_CUBIC;
+                cfg.zoomSpeed = 0.05;
+                cfg.zoomSpeedOut = 0.10;
+            });
+
+            context.getInput().holdKey(ZoomKeyBindings.ZOOM_KEY);
+            context.waitTicks(3); // mid-travel inwards
+
+            ZoomTransition.Type travellingIn = context.computeOnClient(mc -> ZoomState.activeTransition());
+            double speedTravellingIn = context.computeOnClient(mc -> ZoomState.activeSpeed());
+            assertTrue(travellingIn == ZoomTransition.Type.LINEAR,
+                "zooming in should use the inward curve, was " + travellingIn);
+            assertTrue(Math.abs(speedTravellingIn - 0.05) < 1.0e-6,
+                "zooming in should use the inward speed, was " + speedTravellingIn);
+
+            context.waitFor(mc -> ZoomState.currentZoom >= 1.0);
+            context.getInput().releaseKey(ZoomKeyBindings.ZOOM_KEY);
+            context.waitTicks(3); // mid-travel outwards
+
+            ZoomTransition.Type travellingOut = context.computeOnClient(mc -> ZoomState.activeTransition());
+            double speedTravellingOut = context.computeOnClient(mc -> ZoomState.activeSpeed());
+            assertTrue(travellingOut == ZoomTransition.Type.EASE_OUT_CUBIC,
+                "zooming out should use the outward curve, was " + travellingOut);
+            assertTrue(Math.abs(speedTravellingOut - 0.10) < 1.0e-6,
+                "zooming out should use the outward speed, was " + speedTravellingOut);
+        } finally {
+            context.getInput().releaseKey(ZoomKeyBindings.ZOOM_KEY);
+            context.runOnClient(mc -> {
+                cfg.transitionType = in;
+                cfg.transitionTypeOut = out;
+                cfg.zoomSpeed = speedIn;
+                cfg.zoomSpeedOut = speedOut;
+            });
+            context.waitTicks(25);
         }
     }
 

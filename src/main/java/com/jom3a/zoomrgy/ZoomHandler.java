@@ -56,7 +56,16 @@ public class ZoomHandler {
 
         double target = ZoomState.getTargetZoom();
         double current = ZoomState.currentZoom;
-        double speed = ZoomConfig.get().zoomSpeed;
+
+        // Latch the direction before moving, so the curve and speed in play stay consistent for
+        // the whole travel rather than flipping the moment the value settles.
+        if (current < target) {
+            ZoomState.setEasingOut(false);
+        } else if (current > target) {
+            ZoomState.setEasingOut(true);
+        }
+
+        double speed = ZoomState.activeSpeed();
 
         if (current < target) {
             ZoomState.currentZoom = Math.min(target, current + speed);

@@ -86,6 +86,26 @@ public class ZoomConfig {
             }
         }
 
+        // Separate in/out curves and speeds are back. A config from the single-value era should
+        // keep behaving identically, so the outward setting inherits the inward one - unless the
+        // file is old enough to still carry the original zoomOut* pair, which maps directly.
+        if (!json.has("transitionTypeOut")) {
+            String legacyOut = readString(json, "zoomOutTransition");
+            ZoomTransition.Type resolved = null;
+            if (legacyOut != null) {
+                try {
+                    resolved = ZoomTransition.Type.valueOf(legacyOut);
+                } catch (IllegalArgumentException ignored) {
+                    // Unknown name; fall through to inheriting the inward curve.
+                }
+            }
+            instance.transitionTypeOut = resolved != null ? resolved : instance.transitionType;
+        }
+        if (!json.has("zoomSpeedOut")) {
+            Double legacyOutSpeed = readDouble(json, "zoomOutSpeed");
+            instance.zoomSpeedOut = legacyOutSpeed != null ? legacyOutSpeed : instance.zoomSpeed;
+        }
+
         // The cinematic camera toggle plus its multiplier became one smoothness slider.
         if (!json.has("cinematicSmoothness") && Boolean.TRUE.equals(readBoolean(json, "cinematicCamera"))) {
             Double multiplier = readDouble(json, "cinematicCameraMultiplier");
@@ -154,7 +174,12 @@ public class ZoomConfig {
             ? DEFAULTS.transitionType
             : ZoomTransition.normalize(c.transitionType);
 
+        c.transitionTypeOut = c.transitionTypeOut == null
+            ? DEFAULTS.transitionTypeOut
+            : ZoomTransition.normalize(c.transitionTypeOut);
+
         c.zoomSpeed             = sane(c.zoomSpeed,             0.05, 1.00, DEFAULTS.zoomSpeed);
+        c.zoomSpeedOut          = sane(c.zoomSpeedOut,          0.05, 1.00, DEFAULTS.zoomSpeedOut);
         c.zoomMultiplier        = sane(c.zoomMultiplier,        1.5,  20.0, DEFAULTS.zoomMultiplier);
         c.zoomMultiplierPreset2 = sane(c.zoomMultiplierPreset2, 2.0,  50.0, DEFAULTS.zoomMultiplierPreset2);
         c.spyglassZoomMultiplier= sane(c.spyglassZoomMultiplier,2.0,  35.0, DEFAULTS.spyglassZoomMultiplier);
@@ -177,8 +202,13 @@ public class ZoomConfig {
     }
 
     public static class Config {
+        /** Speed and curve for zooming in. */
         public double  zoomSpeed             = 0.1;
         public ZoomTransition.Type transitionType = ZoomTransition.Type.SMOOTHSTEP;
+
+        /** Speed and curve for zooming back out, which need not match the way in. */
+        public double  zoomSpeedOut          = 0.1;
+        public ZoomTransition.Type transitionTypeOut = ZoomTransition.Type.SMOOTHSTEP;
 
         public int     maxScrollLevel        = 10;
         /** Proportional size of one scroll notch. 1.3^9 gives roughly the old range at level 10. */

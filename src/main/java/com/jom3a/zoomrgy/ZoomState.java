@@ -115,6 +115,30 @@ public class ZoomState {
         activeScrollFactor = 1.0;
     }
 
+    // Which way the zoom is currently travelling, so the inward and outward curves and speeds
+    // can differ. Held at its last value while the zoom is at rest.
+    private static boolean easingOut = false;
+
+    public static void setEasingOut(boolean out) {
+        easingOut = out;
+    }
+
+    public static boolean isEasingOut() {
+        return easingOut;
+    }
+
+    /** The easing curve for the direction currently being travelled. */
+    public static ZoomTransition.Type activeTransition() {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        return easingOut ? cfg.transitionTypeOut : cfg.transitionType;
+    }
+
+    /** The interpolation speed for the direction currently being travelled. */
+    public static double activeSpeed() {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        return easingOut ? cfg.zoomSpeedOut : cfg.zoomSpeed;
+    }
+
     public static double getTargetFov() {
         Minecraft mc = Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
@@ -133,7 +157,7 @@ public class ZoomState {
         double baseFov = mc.options.fov().get();
         if (baseFov <= 0.0) return 1.0;
 
-        double t = ZoomTransition.apply(renderZoom, ZoomConfig.get().transitionType);
+        double t = ZoomTransition.apply(renderZoom, activeTransition());
         double fov = Math.max(0.1, baseFov + (getTargetFov() - baseFov) * t);
         return Math.max(1.0, baseFov / fov);
     }

@@ -76,8 +76,10 @@ Below is a detailed breakdown of all available settings:
 
 | In-Game Setting Name | JSON Field Key | Default Value | Description |
 | :--- | :--- | :---: | :--- |
-| **Zoom Speed** | `zoomSpeed` | `0.1` (`10%`) | The rate of transition (interpolation factor). `0.05` is cinematic; `1.0` is instant. |
-| **Transition Type** | `transitionType` | `SMOOTHSTEP` | The mathematical easing function used to interpolate FOV transitions. |
+| **Zoom In Speed** | `zoomSpeed` | `0.1` (`10%`) | Rate of travel inwards. `0.05` is cinematic; `1.0` is instant. |
+| **Zoom In Curve** | `transitionType` | `SMOOTHSTEP` | Easing curve used while zooming in. |
+| **Zoom Out Speed** | `zoomSpeedOut` | `0.1` (`10%`) | Rate of travel back out. Set slower than the inward speed for a lingering release. |
+| **Zoom Out Curve** | `transitionTypeOut` | `SMOOTHSTEP` | Easing curve used while zooming out. Need not match the way in. |
 | **Dynamic Movement Damping**| `movementFovDamping` | `0.8` (`80%`) | Dampens sudden FOV offsets caused by in-game motion (sprinting, flight) to stabilize view. |
 
 ### 🖱 Mouse & Sensitivity
@@ -97,7 +99,7 @@ Below is a detailed breakdown of all available settings:
 | **Show Telemetry HUD** | `showTelemetryHud` | `true` | Shows target name (block/entity) and live distance reading under the crosshair. |
 | **Highlight Targeted Entity**| `highlightTargetEntity`| `true` | Highlights the entity under your crosshair with a glowing client outline. |
 | **HUD Position** | `hudAnchor` | `BOTTOM_CENTER` | Which edge or corner the overlay is anchored to. Any of the nine screen positions. |
-| **HUD Offset X / Y** | `hudOffsetX` / `hudOffsetY` | `0` / `-60` | Nudges the overlay away from its anchor, in pixels. |
+| **HUD Inset X / Y** | `hudOffsetX` / `hudOffsetY` | `0` / `60` | Distance inwards from the anchored edge, in pixels. Positive always moves towards the middle. No effect on centred axes. |
 | **Zoom HUD Text Color** | `zoomHudColor` | `0xFFFFFF` | Colour of the text in the zoom HUD overlay. |
 | **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.4` (`40%`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
 | **Hide Hotbar during Zoom** | `hideHotbar` | `false` | Hides the hotbar and surrounding HUD decorations while zoom is active. |
