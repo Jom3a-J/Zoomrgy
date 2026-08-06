@@ -119,6 +119,7 @@ public class ZoomConfig {
         c.movementFovDamping    = sane(c.movementFovDamping,    0.0,  1.00, DEFAULTS.movementFovDamping);
         c.zoomVignetteOpacity   = sane(c.zoomVignetteOpacity,   0.0,  1.00, DEFAULTS.zoomVignetteOpacity);
 
+        c.scrollStepRatio = sane(c.scrollStepRatio, 1.05, 2.00, DEFAULTS.scrollStepRatio);
         c.maxScrollLevel = Math.max(1, Math.min(20, c.maxScrollLevel));
         c.zoomHudColor  &= 0xFFFFFF;
     }
@@ -143,6 +144,8 @@ public class ZoomConfig {
         @Deprecated
         public ZoomTransition.Type zoomOutTransition = ZoomTransition.Type.SMOOTHSTEP;
         public int     maxScrollLevel        = 10;
+        /** Proportional size of one scroll notch. 1.3^9 gives roughly the old range at level 10. */
+        public double  scrollStepRatio       = 1.3;
         public boolean resetScrollOnRelease  = true;
         public boolean affectHandFov         = true;
         

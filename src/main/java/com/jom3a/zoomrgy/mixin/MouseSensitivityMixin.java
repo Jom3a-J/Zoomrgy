@@ -23,20 +23,18 @@ public abstract class MouseSensitivityMixin {
         double originalX = args.get(0);
         double originalY = args.get(1);
 
-        // Dynamically calculate the scale based on the FOV ratio
+        // Scale by the FOV actually on screen. Reconstructing it from the target and the easing
+        // curve only ever approximated this; the camera already knows the real answer, so the
+        // sensitivity tracks the transition exactly instead of drifting mid-zoom.
         net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
-        double targetFov = ZoomState.getTargetFov();
         if (baseFov <= 0.0) return;
-        double fovRatio = targetFov / baseFov;
 
-        // Follow the same easing curve the FOV itself uses. Scaling by the raw linear ramp
-        // instead would desync sensitivity from what you actually see mid-transition - badly
-        // so for the exponential and elastic curves.
-        double eased = com.jom3a.zoomrgy.ZoomTransition.apply(
-            ZoomState.currentZoom, ZoomConfig.get().transitionType);
+        float currentFov = mc.gameRenderer.mainCamera().getFov();
+        if (!Float.isFinite(currentFov) || currentFov <= 0.0f) return;
 
-        double scale = Math.max(0.01, 1.0 + (fovRatio - 1.0) * eased);
+        // Clamped at 1.0 so the FOV boost from sprinting cannot raise sensitivity above normal.
+        double scale = Math.max(0.01, Math.min(1.0, currentFov / baseFov));
 
         args.set(0, originalX * scale);
         args.set(1, originalY * scale);

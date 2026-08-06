@@ -52,6 +52,14 @@ public class ModMenuIntegration implements ModMenuApi {
                 .build());
 
             controls.addEntry(entry
+                .startIntSlider(Component.literal("Scroll Step Size"), (int) Math.round(cfg.scrollStepRatio * 100), 105, 200)
+                .setDefaultValue((int) Math.round(def.scrollStepRatio * 100))
+                .setTextGetter(val -> Component.literal(String.format(java.util.Locale.US, "%.2fx per notch", val / 100.0)))
+                .setTooltip(Component.literal("How much each scroll notch magnifies. Steps are proportional, so every notch feels the same regardless of how far you are already zoomed in."))
+                .setSaveConsumer(val -> cfg.scrollStepRatio = val / 100.0)
+                .build());
+
+            controls.addEntry(entry
                 .startBooleanToggle(Component.literal("Reset Scroll on Release"), cfg.resetScrollOnRelease)
                 .setDefaultValue(true)
                 .setYesNoTextSupplier(bool -> bool ? Component.literal("ON") : Component.literal("OFF"))

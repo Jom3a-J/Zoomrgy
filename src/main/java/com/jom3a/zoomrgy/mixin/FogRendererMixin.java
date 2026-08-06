@@ -31,9 +31,11 @@ public abstract class FogRendererMixin {
 
         FogData data = info.getReturnValue();
         if (data != null) {
-            // Calculate a multiplier to scale the fog starting and ending distances.
-            // Pushing the fog back proportionally to the zoom multiplier.
-            double multiplier = 1.0 + (ZoomState.scrollLevel * 0.5) * renderZoom;
+            // Push the fog back in proportion to how far you are actually magnified, rather than
+            // by the raw scroll level, which ignored the preset multiplier entirely. Capped so a
+            // very high zoom cannot shove the fog planes somewhere absurd.
+            double magnification = ZoomState.getMagnification(renderZoom);
+            double multiplier = 1.0 + Math.min(8.0, (magnification - 1.0) * 0.35);
 
             data.renderDistanceStart = (float) (data.renderDistanceStart * multiplier);
             data.renderDistanceEnd = (float) (data.renderDistanceEnd * multiplier);

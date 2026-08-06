@@ -2,29 +2,33 @@ package com.jom3a.zoomrgy;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 
 @Environment(EnvType.CLIENT)
 public class ZoomState {
 
-    // Current interpolated zoom progress (0.0 – 1.0)
+    /** Current interpolated zoom progress (0.0 - 1.0). */
     public static double currentZoom = 0.0;
 
-    // Zoom progress from the previous tick
+    /** Zoom progress from the previous tick. */
     public static double lastZoom = 0.0;
 
-    // The discrete zoom multiplier set by scroll (1 = base, higher = more zoom)
-    public static int scrollLevel = 1;
-
-    // Whether the zoom key is held
+    /** Whether the zoom key is held. */
     public static boolean isZooming = false;
 
-    // Whether the zoom is locked active
+    /** Whether the zoom is locked active. */
     public static boolean isZoomLocked = false;
 
-    // Advanced zoom states
     public static boolean isZoomingPreset2 = false;
     public static boolean isSpyglassActive = false;
-    public static net.minecraft.world.entity.Entity targetedEntity = null;
+    public static Entity targetedEntity = null;
+
+    // Each zoom source keeps its own scroll level, so dialling in a long shot on preset 2 does
+    // not throw away where the primary zoom was left.
+    private static int scrollPrimary = 1;
+    private static int scrollPreset2 = 1;
+    private static int scrollSpyglass = 1;
 
     /** True while any zoom source - key, preset 2, lock or spyglass - is engaged. */
     public static boolean isZoomActive() {
@@ -35,17 +39,69 @@ public class ZoomState {
         return isZoomActive() ? 1.0 : 0.0;
     }
 
+    /** The scroll level belonging to whichever zoom source is currently driving. */
+    public static int getScrollLevel() {
+        if (isSpyglassActive) return scrollSpyglass;
+        if (isZoomingPreset2) return scrollPreset2;
+        return scrollPrimary;
+    }
+
+    /** Sets the active source's scroll level, clamped to the configured maximum. */
+    public static void setScrollLevel(int level) {
+        int clamped = Math.max(1, Math.min(maxScrollLevel(), level));
+        if (isSpyglassActive) {
+            scrollSpyglass = clamped;
+        } else if (isZoomingPreset2) {
+            scrollPreset2 = clamped;
+        } else {
+            scrollPrimary = clamped;
+        }
+    }
+
+    public static void resetScrollLevels() {
+        scrollPrimary = 1;
+        scrollPreset2 = 1;
+        scrollSpyglass = 1;
+    }
+
+    /** Pulls every stored level back into range after the maximum is lowered in the config. */
+    public static void clampScrollLevels() {
+        int max = maxScrollLevel();
+        scrollPrimary = Math.max(1, Math.min(max, scrollPrimary));
+        scrollPreset2 = Math.max(1, Math.min(max, scrollPreset2));
+        scrollSpyglass = Math.max(1, Math.min(max, scrollSpyglass));
+    }
+
+    private static int maxScrollLevel() {
+        return Math.max(1, ZoomConfig.get().maxScrollLevel);
+    }
+
+    /**
+     * Extra magnification contributed by the scroll wheel.
+     *
+     * <p>This is geometric rather than linear. Dividing the FOV by the raw level made the first
+     * notch halve it and the tenth barely register; raising a ratio to the level instead makes
+     * every notch the same proportional step, so the wheel feels even across its whole range.
+     */
+    public static double getScrollFactor() {
+        return Math.pow(ZoomConfig.get().scrollStepRatio, getScrollLevel() - 1);
+    }
+
     public static double getTargetFov() {
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
         ZoomConfig.Config cfg = ZoomConfig.get();
+
+        double presetMultiplier;
         if (isSpyglassActive) {
-            return (baseFov / cfg.spyglassZoomMultiplier) / scrollLevel;
+            presetMultiplier = cfg.spyglassZoomMultiplier;
+        } else if (isZoomingPreset2) {
+            presetMultiplier = cfg.zoomMultiplierPreset2;
+        } else {
+            presetMultiplier = cfg.zoomMultiplier;
         }
-        if (isZoomingPreset2) {
-            return (baseFov / cfg.zoomMultiplierPreset2) / scrollLevel;
-        }
-        return (baseFov / cfg.zoomMultiplier) / scrollLevel;
+
+        return baseFov / (presetMultiplier * getScrollFactor());
     }
 
     /**
@@ -56,7 +112,7 @@ public class ZoomState {
     public static double getMagnification(double renderZoom) {
         if (renderZoom <= 0.0) return 1.0;
 
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
         if (baseFov <= 0.0) return 1.0;
 

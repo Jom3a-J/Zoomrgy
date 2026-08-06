@@ -28,14 +28,14 @@ public abstract class MouseScrollMixin {
         ZoomConfig.Config cfg = ZoomConfig.get();
         int maxLevel = cfg.maxScrollLevel; // e.g. 10
 
-        int prev = ZoomState.scrollLevel;
+        int prev = ZoomState.getScrollLevel();
         if (vertical > 0) {
-            ZoomState.scrollLevel = Math.min(ZoomState.scrollLevel + 1, maxLevel);
+            ZoomState.setScrollLevel(prev + 1);
         } else if (vertical < 0) {
-            ZoomState.scrollLevel = Math.max(ZoomState.scrollLevel - 1, 1);
+            ZoomState.setScrollLevel(prev - 1);
         }
 
-        if (ZoomState.scrollLevel != prev && cfg.scrollAudioFeedback) {
+        if (ZoomState.getScrollLevel() != prev && cfg.scrollAudioFeedback) {
             client.getSoundManager().play(
                 net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                     net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.6f

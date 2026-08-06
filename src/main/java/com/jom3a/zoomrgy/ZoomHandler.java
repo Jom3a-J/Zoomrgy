@@ -34,10 +34,9 @@ public class ZoomHandler {
     }
 
     private static void tickZoom() {
-        // Keep the scroll level in range - lowering maxScrollLevel in the config screen
+        // Keep the scroll levels in range - lowering maxScrollLevel in the config screen
         // would otherwise leave a previously scrolled level stuck above the new maximum.
-        int maxLevel = Math.max(1, ZoomConfig.get().maxScrollLevel);
-        ZoomState.scrollLevel = Math.max(1, Math.min(maxLevel, ZoomState.scrollLevel));
+        ZoomState.clampScrollLevels();
 
         ZoomState.lastZoom = ZoomState.currentZoom;
 

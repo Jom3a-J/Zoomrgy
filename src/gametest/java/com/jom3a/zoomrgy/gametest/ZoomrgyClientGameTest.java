@@ -30,6 +30,8 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
             singleplayer.getClientLevel().waitForChunksRender();
 
+            testScrollStepsAreProportional(context);
+            testScrollLevelsArePerPreset(context);
             testScrollLevelClampedToMax(context);
             testScrollIgnoredWhileScreenOpen(context);
             testFovStaysPositiveWithOvershootEasing(context);
@@ -109,18 +111,99 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         int maxScrollLevel = cfg.maxScrollLevel;
 
         try {
+            // Raise the ceiling first, so the level really is set high and is not simply rejected
+            // on the way in - the clamp under test is the one that runs on tick.
             context.runOnClient(mc -> {
-                ZoomState.scrollLevel = 15;
-                cfg.maxScrollLevel = 3;
+                cfg.maxScrollLevel = 20;
+                ZoomState.setScrollLevel(15);
             });
             context.waitTicks(3);
+            int raised = context.computeOnClient(mc -> ZoomState.getScrollLevel());
+            assertTrue(raised == 15, "scroll level should have reached 15, was " + raised);
 
-            int level = context.computeOnClient(mc -> ZoomState.scrollLevel);
+            context.runOnClient(mc -> cfg.maxScrollLevel = 3);
+            context.waitTicks(3);
+            int level = context.computeOnClient(mc -> ZoomState.getScrollLevel());
             assertTrue(level == 3, "scroll level should have clamped to 3, was " + level);
         } finally {
             context.runOnClient(mc -> {
                 cfg.maxScrollLevel = maxScrollLevel;
-                ZoomState.scrollLevel = 1;
+                ZoomState.resetScrollLevels();
+            });
+        }
+    }
+
+    /**
+     * Every scroll notch should be the same proportional step. The old linear divisor made the
+     * first notch halve the FOV and the last one barely register.
+     */
+    private void testScrollStepsAreProportional(ClientGameTestContext context) {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        int maxScrollLevel = cfg.maxScrollLevel;
+        double ratio = cfg.scrollStepRatio;
+
+        try {
+            context.runOnClient(mc -> {
+                cfg.maxScrollLevel = 20;
+                cfg.scrollStepRatio = 1.5;
+            });
+
+            double previousStep = -1.0;
+            for (int level = 1; level <= 5; level++) {
+                final int target = level;
+                double factor = context.computeOnClient(mc -> {
+                    ZoomState.setScrollLevel(target);
+                    return ZoomState.getScrollFactor();
+                });
+
+                if (previousStep > 0.0) {
+                    double step = factor / previousStep;
+                    assertTrue(Math.abs(step - 1.5) < 1.0e-6,
+                        "step from level " + (level - 1) + " to " + level + " was " + step + ", expected 1.5");
+                }
+                previousStep = factor;
+            }
+        } finally {
+            context.runOnClient(mc -> {
+                cfg.maxScrollLevel = maxScrollLevel;
+                cfg.scrollStepRatio = ratio;
+                ZoomState.resetScrollLevels();
+            });
+        }
+    }
+
+    /** Each zoom source keeps its own level, so dialling in preset 2 must not disturb the primary. */
+    private void testScrollLevelsArePerPreset(ClientGameTestContext context) {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        int maxScrollLevel = cfg.maxScrollLevel;
+
+        try {
+            int primary = context.computeOnClient(mc -> {
+                cfg.maxScrollLevel = 20;
+
+                ZoomState.isZoomingPreset2 = false;
+                ZoomState.setScrollLevel(4);
+
+                ZoomState.isZoomingPreset2 = true;
+                ZoomState.setScrollLevel(11);
+
+                ZoomState.isZoomingPreset2 = false;
+                return ZoomState.getScrollLevel();
+            });
+            assertTrue(primary == 4, "primary scroll level should have survived at 4, was " + primary);
+
+            int preset2 = context.computeOnClient(mc -> {
+                ZoomState.isZoomingPreset2 = true;
+                int level = ZoomState.getScrollLevel();
+                ZoomState.isZoomingPreset2 = false;
+                return level;
+            });
+            assertTrue(preset2 == 11, "preset 2 scroll level should have been remembered as 11, was " + preset2);
+        } finally {
+            context.runOnClient(mc -> {
+                cfg.maxScrollLevel = maxScrollLevel;
+                ZoomState.isZoomingPreset2 = false;
+                ZoomState.resetScrollLevels();
             });
         }
     }
@@ -134,24 +217,24 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         try {
             context.runOnClient(mc -> {
                 ZoomState.isZoomLocked = true;
-                ZoomState.scrollLevel = 1;
+                ZoomState.resetScrollLevels();
             });
             context.waitTicks(3);
 
             // Control: in-world scrolling should still change the zoom level.
             context.getInput().scroll(0.0, 1.0);
             context.waitTicks(3);
-            int inWorld = context.computeOnClient(mc -> ZoomState.scrollLevel);
+            int inWorld = context.computeOnClient(mc -> ZoomState.getScrollLevel());
             assertTrue(inWorld > 1, "scrolling in-world while zoomed should raise the level, was " + inWorld);
 
             // The actual regression: the same scroll with a screen open must be left alone.
             context.setScreen(() -> new ChatScreen("", false));
             context.waitFor(mc -> mc.gui.screen() != null);
 
-            int before = context.computeOnClient(mc -> ZoomState.scrollLevel);
+            int before = context.computeOnClient(mc -> ZoomState.getScrollLevel());
             context.getInput().scroll(0.0, 1.0);
             context.waitTicks(3);
-            int after = context.computeOnClient(mc -> ZoomState.scrollLevel);
+            int after = context.computeOnClient(mc -> ZoomState.getScrollLevel());
             assertTrue(before == after,
                 "scrolling with a screen open must not change the zoom level (" + before + " -> " + after + ")");
 
@@ -160,7 +243,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         } finally {
             context.runOnClient(mc -> {
                 ZoomState.isZoomLocked = false;
-                ZoomState.scrollLevel = 1;
+                ZoomState.resetScrollLevels();
             });
             context.waitTicks(3);
         }
@@ -184,7 +267,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
                 cfg.zoomMultiplierPreset2 = 50.0; // config screen maximum
                 cfg.maxScrollLevel = 20;
                 cfg.zoomSpeed = 0.05;             // ~20 ticks, so we sample the whole curve
-                ZoomState.scrollLevel = 20;
+                ZoomState.setScrollLevel(20);
             });
 
             context.getInput().holdKey(ZoomKeyBindings.ZOOM_PRESET_2_KEY);
@@ -204,7 +287,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
                 cfg.zoomMultiplierPreset2 = preset2;
                 cfg.maxScrollLevel = maxScrollLevel;
                 cfg.zoomSpeed = zoomSpeed;
-                ZoomState.scrollLevel = 1;
+                ZoomState.resetScrollLevels();
             });
             context.waitTicks(25); // let the zoom settle back out
         }

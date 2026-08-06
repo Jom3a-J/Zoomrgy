@@ -72,7 +72,7 @@ public class ZoomKeyBindings {
                     ZoomState.isZoomLocked = false;
                     ZoomState.isSpyglassActive = false;
                     ZoomState.targetedEntity = null;
-                    ZoomState.scrollLevel = 1;
+                    ZoomState.resetScrollLevels();
                     wasPressing = false;
                     wasPressingPreset2 = false;
                     wasActive = false;
@@ -165,9 +165,9 @@ public class ZoomKeyBindings {
             // Handle Zoom In / Zoom Out keybinds while active
             if (activeAfter) {
                 while (ZOOM_IN_KEY.consumeClick()) {
-                    int prev = ZoomState.scrollLevel;
-                    ZoomState.scrollLevel = Math.min(ZoomState.scrollLevel + 1, cfg.maxScrollLevel);
-                    if (ZoomState.scrollLevel != prev && cfg.scrollAudioFeedback) {
+                    int prev = ZoomState.getScrollLevel();
+                    ZoomState.setScrollLevel(prev + 1);
+                    if (ZoomState.getScrollLevel() != prev && cfg.scrollAudioFeedback) {
                         client.getSoundManager().play(
                             net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                                 net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.6f
@@ -176,9 +176,9 @@ public class ZoomKeyBindings {
                     }
                 }
                 while (ZOOM_OUT_KEY.consumeClick()) {
-                    int prev = ZoomState.scrollLevel;
-                    ZoomState.scrollLevel = Math.max(ZoomState.scrollLevel - 1, 1);
-                    if (ZoomState.scrollLevel != prev && cfg.scrollAudioFeedback) {
+                    int prev = ZoomState.getScrollLevel();
+                    ZoomState.setScrollLevel(prev - 1);
+                    if (ZoomState.getScrollLevel() != prev && cfg.scrollAudioFeedback) {
                         client.getSoundManager().play(
                             net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                                 net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.6f
@@ -194,7 +194,7 @@ public class ZoomKeyBindings {
 
             // Reset scroll level on total release
             if (!activeAfter && wasActive && cfg.resetScrollOnRelease) {
-                ZoomState.scrollLevel = 1;
+                ZoomState.resetScrollLevels();
             }
             wasActive = activeAfter;
         });
