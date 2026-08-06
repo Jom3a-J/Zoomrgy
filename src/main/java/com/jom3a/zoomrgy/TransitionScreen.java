@@ -39,6 +39,10 @@ public class TransitionScreen extends Screen {
     private int previewWidth;
     private int previewHeight;
 
+    private int dividerX;
+    private int contentTop;
+    private int contentBottom;
+
     public TransitionScreen(Screen parent) {
         super(Component.literal("Easing & Transitions"));
         this.parent = parent;
@@ -54,15 +58,24 @@ public class TransitionScreen extends Screen {
     protected void init() {
         ZoomPreviewImage.ensureAvailable();
 
-        int columnWidth = Math.max(150, (this.width - MARGIN * 2 - GUTTER) / 2);
-        int left = MARGIN;
-        int top = 44;
+        // Two columns either side of a centre line, each inset from it by the gutter.
+        dividerX = this.width / 2;
+        contentTop = 36;
+        contentBottom = this.height - 38;
 
-        // Right column: a 16:9 panel filling the remaining width.
-        previewWidth = Math.max(160, this.width - MARGIN * 2 - GUTTER - columnWidth);
-        previewHeight = previewWidth * 9 / 16;
-        previewLeft = this.width - MARGIN - previewWidth;
-        previewTop = top;
+        int columnWidth = Math.max(120, dividerX - GUTTER - MARGIN);
+        int rightWidth = Math.max(120, this.width - MARGIN - (dividerX + GUTTER));
+
+        int controlsHeight = ROW_HEIGHT * 3 + CONTROL_HEIGHT;
+        int centerY = (contentTop + contentBottom) / 2;
+        int top = Math.max(contentTop + 4, centerY - controlsHeight / 2);
+
+        previewWidth = rightWidth;
+        previewHeight = Math.min(previewWidth * 9 / 16, contentBottom - contentTop - 8);
+        previewLeft = dividerX + GUTTER;
+        previewTop = centerY - previewHeight / 2;
+
+        int left = MARGIN;
 
         addRenderableWidget(new SpeedSlider(left, top, columnWidth,
             "Zoom In Speed", speedIn, value -> speedIn = value));
@@ -92,7 +105,10 @@ public class TransitionScreen extends Screen {
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
         extractor.text(this.font, this.title,
-            this.width / 2 - this.font.width(this.title) / 2, 18, 0xFFFFFFFF, true);
+            this.width / 2 - this.font.width(this.title) / 2, 14, 0xFFFFFFFF, true);
+
+        // The line the two columns sit either side of.
+        extractor.fill(dividerX, contentTop, dividerX + 1, contentBottom, 0x60FFFFFF);
 
         EasingPreview.render(extractor, this.font, previewLeft, previewTop, previewWidth, previewHeight,
             curveIn, curveOut, speedIn, speedOut);
