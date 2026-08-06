@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "Zoomrgy",
   "icon": "assets/zoomrgy/icon.png",
-  "description": "A fully-featured, highly configurable zoom mod for Minecraft. Features ultra-smooth transitions (Smith Zoom) with adjustable speeds and customizable easing curves (Linear, Ease In, Ease Out, Ease In-Out, and Smoothstep). Control your zoom level dynamically using your scroll wheel, customize your preferences via the Mod Menu interface, and save your custom profiles automatically. Default keybind: C.",
+  "description": "A fully-featured, highly configurable client-side zoom mod. Smooth FOV transitions with adjustable speed and a choice of easing curves (sine, quadratic, cubic, exponential, smoothstep, circular, back, elastic and bounce). Scroll to change magnification on the fly, with a rangefinder HUD, target highlighting and fog reduction. Configurable through Mod Menu. Default keybind: C.",
   "authors": ["Jom3a"],
   "contact": {},
   "license": "MIT",

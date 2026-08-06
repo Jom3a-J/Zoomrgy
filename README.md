@@ -23,10 +23,12 @@ Zoomrgy provides a smooth, premium zooming experience ("Smith Zoom") featuring h
 
 To run Zoomrgy, place the compiled `.jar` file in your Minecraft `mods` folder. Make sure you have installed the following:
 
-1. **[Fabric Loader](https://fabricmc.net/)** (version `>=0.19.2` or newer)
-2. **[Fabric API](https://modrinth.com/mod/fabric-api)** (version `>=0.150.0`)
-3. **[Cloth Config API](https://modrinth.com/mod/cloth-config)** (Required for the configuration UI screen)
-4. **[Mod Menu](https://modrinth.com/mod/modmenu)** (Highly recommended; provides access to the config screen GUI)
+1. **Minecraft** `26.2`
+2. **Java** `25` or newer
+3. **[Fabric Loader](https://fabricmc.net/)** (version `>=0.19.3`)
+4. **[Fabric API](https://modrinth.com/mod/fabric-api)** (version `>=0.152.0`)
+5. **[Cloth Config API](https://modrinth.com/mod/cloth-config)** (Required for the configuration UI screen)
+6. **[Mod Menu](https://modrinth.com/mod/modmenu)** (Highly recommended; provides access to the config screen GUI)
 
 ---
 
@@ -74,7 +76,7 @@ Below is a detailed breakdown of all available settings:
 | In-Game Setting Name | JSON Field Key | Default Value | Description |
 | :--- | :--- | :---: | :--- |
 | **Zoom Speed** | `zoomSpeed` | `0.1` (`10%`) | The rate of transition (interpolation factor). `0.05` is cinematic; `1.0` is instant. |
-| **Transition Type** | `transitionType` | `SMOOTHSTEP` | The mathematical easing function used to interpolate FOV transitions. |
+| **Transition Type** | `transitionType` | `EASE_IN_OUT_SINE` | The mathematical easing function used to interpolate FOV transitions. |
 | **Dynamic Movement Damping**| `movementFovDamping` | `0.8` (`80%`) | Dampens sudden FOV offsets caused by in-game motion (sprinting, flight) to stabilize view. |
 
 ### 🖱 Mouse & Sensitivity
@@ -93,7 +95,9 @@ Below is a detailed breakdown of all available settings:
 | **Zoom HUD Background** | `zoomHudBackground` | `true` | Shows a semi-transparent dark plate with a subtle border outline behind the HUD. |
 | **Show Telemetry HUD** | `showTelemetryHud` | `true` | Shows target name (block/entity) and live distance reading under the crosshair. |
 | **Highlight Targeted Entity**| `highlightTargetEntity`| `true` | Highlights the entity under your crosshair with a glowing client outline. |
-| **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.4` (`40%`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
+| **Zoom HUD Text Color** | `zoomHudColor` | `0xFFFFFF` | Colour of the text in the zoom HUD overlay. |
+| **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.0` (`OFF`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
+| **Hide Hotbar during Zoom** | `hideHotbar` | `false` | Hides the hotbar and surrounding HUD decorations while zoom is active. |
 | **Reduce Fog during Zoom** | `reduceFog` | `true` | Dynamically pushes environmental fog back during active zoom to maximize sight lines. |
 | **Hide Crosshair during Zoom**| `hideCrosshair` | `false` | Hides the crosshair cursor during active zoom. |
 | **Spyglass Scope Simulation**| `spyglassScopeOverlay`| `false` | Renders a circular spyglass overlay mask on the screen during zoom. |

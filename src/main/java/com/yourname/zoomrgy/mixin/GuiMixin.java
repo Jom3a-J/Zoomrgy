@@ -49,7 +49,12 @@ public abstract class GuiMixin {
 
     @Inject(method = "extractSpyglassOverlay", at = @At("HEAD"), cancellable = true, require = 1)
     private void onExtractSpyglassOverlay(net.minecraft.client.gui.GuiGraphicsExtractor guiGraphics, float f, CallbackInfo ci) {
-        if (!ZoomConfig.get().showVanillaSpyglassOverlay) {
+        if (ZoomConfig.get().showVanillaSpyglassOverlay) return;
+
+        // Only suppress vanilla's scope while this mod is the thing driving the spyglass zoom.
+        // Cancelling unconditionally meant that turning spyglass auto-zoom off still deleted
+        // vanilla's overlay, changing behaviour the mod is otherwise not involved in.
+        if (ZoomState.isSpyglassActive) {
             ci.cancel();
         }
     }
@@ -58,22 +63,23 @@ public abstract class GuiMixin {
     private void onExtractRenderState(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker, CallbackInfo ci) {
         ZoomConfig.Config cfg = ZoomConfig.get();
         double renderZoom = zoomrgy$lerp(ZoomState.lastZoom, ZoomState.currentZoom, (double) deltaTracker.getGameTimeDeltaPartialTick(true));
-
-        // Draw overlays if zoom is active
-        if (renderZoom > 0.0) {
-            float alpha = (float) renderZoom;
-            if (cfg.spyglassScopeOverlay) {
-                this.extractTextureOverlay(extractor, SPYGLASS_SCOPE_TEXTURE, alpha);
-            } else if (cfg.zoomVignetteOpacity > 0.0) {
-                this.extractTextureOverlay(extractor, VIGNETTE_TEXTURE, alpha * (float) cfg.zoomVignetteOpacity);
-            }
-        }
-
-        if (!cfg.showZoomHud) return;
         if (renderZoom <= 0.0) return;
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.gui.hud.isHidden() || mc.player == null) return;
+        // The vignette and scope are HUD elements, so they have to respect F1 as well - vanilla
+        // hides its own spyglass overlay with it. This guard has to come before the overlays are
+        // drawn, not just before the text.
+        if (mc.player == null || mc.gui.hud.isHidden()) return;
+
+        // Draw overlays if zoom is active
+        float overlayAlpha = (float) renderZoom;
+        if (cfg.spyglassScopeOverlay) {
+            this.extractTextureOverlay(extractor, SPYGLASS_SCOPE_TEXTURE, overlayAlpha);
+        } else if (cfg.zoomVignetteOpacity > 0.0) {
+            this.extractTextureOverlay(extractor, VIGNETTE_TEXTURE, overlayAlpha * (float) cfg.zoomVignetteOpacity);
+        }
+
+        if (!cfg.showZoomHud) return;
 
         int width = extractor.guiWidth();
         int height = extractor.guiHeight();
@@ -132,7 +138,9 @@ public abstract class GuiMixin {
                         distance = eyePos.distanceTo(entityHit.getLocation());
                     }
                     if (!targetName.isEmpty()) {
-                        String icon = "👤";
+                        // Must stay inside the BMP - Minecraft only loads the plane 0 unifont
+                        // files, so a supplementary-plane glyph renders as a missing-glyph box.
+                        String icon = "☺";
                         if (entity instanceof net.minecraft.world.entity.monster.Monster) {
                             icon = "☠";
                         } else if (entity instanceof net.minecraft.world.entity.animal.Animal) {
