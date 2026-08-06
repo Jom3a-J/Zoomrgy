@@ -233,7 +233,7 @@ public class ModMenuIntegration implements ModMenuApi {
                 .startIntSlider(Component.literal("HUD Inset X"), cfg.hudOffsetX, -200, 200)
                 .setDefaultValue(def.hudOffsetX)
                 .setTextGetter(val -> Component.literal(val + " px"))
-                .setTooltip(Component.literal("Horizontal distance inwards from the anchored edge. Positive always moves towards the middle of the screen, whichever side the HUD is anchored to."))
+                .setTooltip(Component.literal("Horizontal distance inwards from the anchored edge. Positive always moves towards the middle of the screen, whichever side the HUD is anchored to. Has no effect on horizontally centred positions, which have no edge to inset from."))
                 .setSaveConsumer(val -> cfg.hudOffsetX = val)
                 .build());
 
@@ -241,7 +241,7 @@ public class ModMenuIntegration implements ModMenuApi {
                 .startIntSlider(Component.literal("HUD Inset Y"), cfg.hudOffsetY, -200, 200)
                 .setDefaultValue(def.hudOffsetY)
                 .setTextGetter(val -> Component.literal(val + " px"))
-                .setTooltip(Component.literal("Vertical distance inwards from the anchored edge. Positive moves down from a top anchor and up from a bottom one."))
+                .setTooltip(Component.literal("Vertical distance inwards from the anchored edge. Positive moves down from a top anchor and up from a bottom one. Has no effect on the vertically centred positions, which stay on the midline."))
                 .setSaveConsumer(val -> cfg.hudOffsetY = val)
                 .build());
 

@@ -53,14 +53,12 @@ public final class ZoomHud {
      * edge, so one default works for every anchor instead of only the bottom ones.
      */
     public static float originX(HudAnchor anchor, int guiWidth, int offsetX) {
-        float direction = anchor.isRightAligned() ? -1.0f : 1.0f;
-        return guiWidth * anchor.horizontal() + offsetX * direction;
+        return guiWidth * anchor.horizontal() + offsetX * anchor.insetDirectionX();
     }
 
     /** Vertical origin for an anchor, measured inwards from the anchored edge. */
     public static float originY(HudAnchor anchor, int guiHeight, int offsetY) {
-        float direction = anchor.vertical() >= 1.0f ? -1.0f : 1.0f;
-        return guiHeight * anchor.vertical() + offsetY * direction;
+        return guiHeight * anchor.vertical() + offsetY * anchor.insetDirectionY();
     }
 
     /**

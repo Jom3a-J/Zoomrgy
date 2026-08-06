@@ -111,18 +111,51 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
      */
     private void testEveryAnchorLandsOnScreen(ClientGameTestContext context) {
         ZoomConfig.Config def = ZoomConfig.defaults();
+
+        // Several sizes, because the interesting failures depend on screen height. At 270 - a
+        // 1080p window at GUI scale 4 - a centre anchor that wrongly takes the inset lands within
+        // 15px of the bottom anchor, so the position setting looks like it does nothing.
+        int[][] sizes = {{854, 480}, {480, 270}, {320, 240}, {1920, 1080}};
+
+        for (int[] size : sizes) {
+            int width = size[0];
+            int height = size[1];
+
+            for (HudAnchor anchor : HudAnchor.values()) {
+                float x = ZoomHud.originX(anchor, width, def.hudOffsetX);
+                float y = ZoomHud.originY(anchor, height, def.hudOffsetY);
+
+                assertTrue(x >= 0.0f && x <= width,
+                    anchor + " puts the HUD origin at x=" + x + ", outside 0.." + width);
+                assertTrue(y >= 0.0f && y <= height,
+                    anchor + " puts the HUD origin at y=" + y + ", outside 0.." + height);
+            }
+
+            // Distinct anchors must land in visibly distinct places, or picking one silently
+            // does nothing.
+            HudAnchor[] all = HudAnchor.values();
+            for (int i = 0; i < all.length; i++) {
+                for (int j = i + 1; j < all.length; j++) {
+                    float dx = ZoomHud.originX(all[i], width, def.hudOffsetX)
+                        - ZoomHud.originX(all[j], width, def.hudOffsetX);
+                    float dy = ZoomHud.originY(all[i], height, def.hudOffsetY)
+                        - ZoomHud.originY(all[j], height, def.hudOffsetY);
+
+                    assertTrue(Math.abs(dx) >= 20.0f || Math.abs(dy) >= 20.0f,
+                        all[i] + " and " + all[j] + " land " + Math.abs(dx) + "," + Math.abs(dy)
+                            + " apart at " + width + "x" + height + " - too close to tell apart");
+                }
+            }
+        }
+
         int width = 854;
         int height = 480;
 
-        for (HudAnchor anchor : HudAnchor.values()) {
-            float x = ZoomHud.originX(anchor, width, def.hudOffsetX);
-            float y = ZoomHud.originY(anchor, height, def.hudOffsetY);
-
-            assertTrue(x >= 0.0f && x <= width,
-                anchor + " puts the HUD origin at x=" + x + ", outside 0.." + width);
-            assertTrue(y >= 0.0f && y <= height,
-                anchor + " puts the HUD origin at y=" + y + ", outside 0.." + height);
-        }
+        // A centred axis has no edge to inset from, so the inset must not move it.
+        assertTrue(ZoomHud.originY(HudAnchor.CENTER, height, 60) == height / 2.0f,
+            "CENTER should sit on the vertical midpoint regardless of the inset");
+        assertTrue(ZoomHud.originX(HudAnchor.TOP_CENTER, width, 60) == width / 2.0f,
+            "TOP_CENTER should sit on the horizontal midpoint regardless of the inset");
 
         // The inset must move inwards from whichever edge is anchored, not in one fixed direction.
         assertTrue(ZoomHud.originY(HudAnchor.TOP_CENTER, height, 60) > 0.0f,

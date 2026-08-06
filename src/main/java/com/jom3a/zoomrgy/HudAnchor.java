@@ -37,6 +37,25 @@ public enum HudAnchor {
         return vertical;
     }
 
+    /**
+     * Which way the horizontal inset moves: +1 inwards from the left edge, -1 inwards from the
+     * right, and 0 when the axis is centred. A centred axis has no edge to inset from, so
+     * applying one there would just drag "centre" off towards a side - far enough, on a short
+     * screen, to land on top of the neighbouring anchor.
+     */
+    public float insetDirectionX() {
+        if (horizontal == 0.0f) return 1.0f;
+        if (horizontal == 1.0f) return -1.0f;
+        return 0.0f;
+    }
+
+    /** Vertical counterpart of {@link #insetDirectionX()}. */
+    public float insetDirectionY() {
+        if (vertical == 0.0f) return 1.0f;
+        if (vertical == 1.0f) return -1.0f;
+        return 0.0f;
+    }
+
     /** True when the panel should grow outwards from its horizontal centre. */
     public boolean isHorizontallyCentered() {
         return horizontal == 0.5f;
