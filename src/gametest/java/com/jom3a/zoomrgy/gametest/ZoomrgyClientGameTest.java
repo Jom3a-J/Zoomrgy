@@ -84,7 +84,6 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             cfg.transitionType = null;
             cfg.zoomSpeed = Double.NaN;
             cfg.hudAnchor = null;
-            cfg.hudScale = Double.NaN;
 
             ZoomConfig.sanitize();
 
@@ -93,7 +92,6 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             assertTrue(cfg.transitionType != null, "transitionType must not stay null");
             assertTrue(Double.isFinite(cfg.zoomSpeed), "zoomSpeed must be finite, was " + cfg.zoomSpeed);
             assertTrue(cfg.hudAnchor != null, "hudAnchor must not stay null");
-            assertTrue(cfg.hudScale > 0.0, "hudScale must be positive, was " + cfg.hudScale);
         } finally {
             cfg.zoomMultiplier = zoomMultiplier;
             cfg.maxScrollLevel = maxScrollLevel;
@@ -177,7 +175,6 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         ZoomConfig.Config cfg = ZoomConfig.get();
 
         HudAnchor anchor = cfg.hudAnchor;
-        double scale = cfg.hudScale;
         int offsetX = cfg.hudOffsetX;
         int offsetY = cfg.hudOffsetY;
         boolean showHud = cfg.showZoomHud;
@@ -196,19 +193,14 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             for (HudAnchor candidate : HudAnchor.values()) {
                 context.runOnClient(mc -> {
                     cfg.hudAnchor = candidate;
-                    cfg.hudScale = 0.5;
                     cfg.hudOffsetX = 40;
                     cfg.hudOffsetY = -40;
                 });
-                context.waitTicks(2);
-
-                context.runOnClient(mc -> cfg.hudScale = 2.0);
-                context.waitTicks(2);
+                context.waitTicks(3);
             }
         } finally {
             context.runOnClient(mc -> {
                 cfg.hudAnchor = anchor;
-                cfg.hudScale = scale;
                 cfg.hudOffsetX = offsetX;
                 cfg.hudOffsetY = offsetY;
                 cfg.showZoomHud = showHud;

@@ -246,14 +246,6 @@ public class ModMenuIntegration implements ModMenuApi {
                 .build());
 
             hudGroup.add(entry
-                .startIntSlider(Component.literal("HUD Scale"), (int) Math.round(cfg.hudScale * 100), 50, 200)
-                .setDefaultValue((int) Math.round(def.hudScale * 100))
-                .setTextGetter(val -> Component.literal(val + "%"))
-                .setTooltip(Component.literal("Size of the zoom overlay relative to normal GUI scale."))
-                .setSaveConsumer(val -> cfg.hudScale = val / 100.0)
-                .build());
-
-            hudGroup.add(entry
                 .startColorField(Component.literal("Zoom HUD Text Color"), cfg.zoomHudColor)
                 .setDefaultValue(0xFFFFFF)
                 .setTooltip(Component.literal("Color of the text displayed in the zoom HUD overlay."))

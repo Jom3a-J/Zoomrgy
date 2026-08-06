@@ -126,7 +126,6 @@ public class ZoomConfig {
         c.zoomVignetteOpacity   = sane(c.zoomVignetteOpacity,   0.0,  1.00, DEFAULTS.zoomVignetteOpacity);
 
         c.scrollStepRatio = sane(c.scrollStepRatio, 1.05, 2.00, DEFAULTS.scrollStepRatio);
-        c.hudScale        = sane(c.hudScale,        0.50, 2.00, DEFAULTS.hudScale);
 
         if (c.hudAnchor == null) c.hudAnchor = DEFAULTS.hudAnchor;
         c.hudOffsetX = Math.max(-2000, Math.min(2000, c.hudOffsetX));
@@ -176,7 +175,6 @@ public class ZoomConfig {
         /** Insets measured inwards from the anchored edge, so one default suits every anchor. */
         public int     hudOffsetX            = 0;
         public int     hudOffsetY            = 60;
-        public double  hudScale              = 1.0;
         public boolean reduceFog             = true;
         public double  zoomVignetteOpacity   = 0.4;
         public boolean hideCrosshair         = false;

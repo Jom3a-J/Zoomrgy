@@ -98,7 +98,6 @@ Below is a detailed breakdown of all available settings:
 | **Highlight Targeted Entity**| `highlightTargetEntity`| `true` | Highlights the entity under your crosshair with a glowing client outline. |
 | **HUD Position** | `hudAnchor` | `BOTTOM_CENTER` | Which edge or corner the overlay is anchored to. Any of the nine screen positions. |
 | **HUD Offset X / Y** | `hudOffsetX` / `hudOffsetY` | `0` / `-60` | Nudges the overlay away from its anchor, in pixels. |
-| **HUD Scale** | `hudScale` | `1.0` (`100%`) | Size of the overlay relative to normal GUI scale. |
 | **Zoom HUD Text Color** | `zoomHudColor` | `0xFFFFFF` | Colour of the text in the zoom HUD overlay. |
 | **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.4` (`40%`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
 | **Hide Hotbar during Zoom** | `hideHotbar` | `false` | Hides the hotbar and surrounding HUD decorations while zoom is active. |

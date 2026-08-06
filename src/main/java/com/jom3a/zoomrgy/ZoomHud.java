@@ -86,9 +86,8 @@ public final class ZoomHud {
         int panelHeight = lines.size() * lineHeight + (lines.size() - 1) * LINE_GAP;
 
         HudAnchor anchor = cfg.hudAnchor == null ? HudAnchor.BOTTOM_CENTER : cfg.hudAnchor;
-        float scale = (float) cfg.hudScale;
 
-        // Laid out in unscaled local space around the origin, then moved into place by the matrix,
+        // Laid out in local space around the origin, then moved into place by the matrix,
         // so the layout arithmetic stays independent of position and scale.
         float originX = originX(anchor, extractor.guiWidth(), cfg.hudOffsetX);
         float originY = originY(anchor, extractor.guiHeight(), cfg.hudOffsetY);
@@ -109,11 +108,11 @@ public final class ZoomHud {
         int alpha = (int) (renderZoom * 255.0) & 0xFF;
         int textColor = (cfg.zoomHudColor & 0xFFFFFF) | (alpha << 24);
 
+        // Translate only, never scale: the extractor already works in Minecraft's GUI-scaled
+        // space, so drawing at the font's natural size is what keeps this the same size as the
+        // hotbar and hearts. The matrix is still worth using so the slide stays sub-pixel smooth.
         extractor.pose().pushMatrix();
         extractor.pose().translate(originX, originY + slide);
-        if (scale != 1.0f) {
-            extractor.pose().scale(scale, scale);
-        }
 
         if (cfg.zoomHudBackground) {
             drawPanel(extractor,
