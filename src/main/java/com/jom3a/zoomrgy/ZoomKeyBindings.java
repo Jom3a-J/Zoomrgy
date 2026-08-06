@@ -66,7 +66,7 @@ public class ZoomKeyBindings {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) {
-                if (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive) {
+                if (ZoomState.isZoomActive()) {
                     ZoomState.isZooming = false;
                     ZoomState.isZoomingPreset2 = false;
                     ZoomState.isZoomLocked = false;
@@ -85,8 +85,6 @@ public class ZoomKeyBindings {
 
             // Drive spyglass state
             ZoomState.isSpyglassActive = cfg.spyglassAutoZoom && client.player.isUsingItem() && client.player.getUseItem().is(net.minecraft.world.item.Items.SPYGLASS);
-
-            boolean activeBefore = ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive;
 
             if (isHurt) {
                 ZoomState.isZooming = false;
@@ -162,7 +160,7 @@ public class ZoomKeyBindings {
                 }
             }
 
-            boolean activeAfter = ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive;
+            boolean activeAfter = ZoomState.isZoomActive();
 
             // Handle Zoom In / Zoom Out keybinds while active
             if (activeAfter) {

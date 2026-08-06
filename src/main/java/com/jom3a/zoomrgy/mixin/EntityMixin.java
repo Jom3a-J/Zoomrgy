@@ -19,7 +19,7 @@ public abstract class EntityMixin {
         if (info.getReturnValue()) return; // Already glowing
 
         ZoomConfig.Config cfg = ZoomConfig.get();
-        if (cfg.highlightTargetEntity && (ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) {
+        if (cfg.highlightTargetEntity && ZoomState.isZoomActive()) {
             Entity thisEntity = (Entity) (Object) this;
             if (thisEntity == ZoomState.targetedEntity) {
                 info.setReturnValue(true);

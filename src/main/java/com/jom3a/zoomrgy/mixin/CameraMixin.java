@@ -47,7 +47,8 @@ public abstract class CameraMixin {
 
         // Update targeted entity on render frame for smooth glowing outline
         if (cfg.highlightTargetEntity && mc.level != null) {
-            net.minecraft.world.phys.HitResult hit = com.jom3a.zoomrgy.ZoomHandler.customRaycast(mc, 150.0, partialTick);
+            double range = com.jom3a.zoomrgy.ZoomTargeting.rangeFor(ZoomState.getMagnification(renderZoom));
+            net.minecraft.world.phys.HitResult hit = com.jom3a.zoomrgy.ZoomTargeting.raycast(mc, range, partialTick);
             if (hit instanceof net.minecraft.world.phys.EntityHitResult entityHit) {
                 ZoomState.targetedEntity = entityHit.getEntity();
             } else {

@@ -23,7 +23,7 @@ public abstract class MouseScrollMixin {
         if (client.player == null) return;
         if (client.gui.screen() != null || client.gui.overlay() != null) return;
 
-        if (!(ZoomState.isZooming || ZoomState.isZoomingPreset2 || ZoomState.isZoomLocked || ZoomState.isSpyglassActive)) return;
+        if (!ZoomState.isZoomActive()) return;
 
         ZoomConfig.Config cfg = ZoomConfig.get();
         int maxLevel = cfg.maxScrollLevel; // e.g. 10
