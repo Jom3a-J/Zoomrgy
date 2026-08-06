@@ -12,34 +12,33 @@ import net.minecraft.network.chat.Component;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
+import java.util.Locale;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 /**
- * A live preview of the configured easing curves.
+ * A live preview of the configured easing, shown as the zoom itself rather than as a graph.
  *
- * <p>Draws the inward and outward curves as graphs and runs a marker along them on a loop, timed
- * from the configured speeds, so the effect of a change is visible without leaving the screen.
+ * <p>A framed viewport sits on the right of the row, like any other Cloth widget, and the shapes
+ * inside it swell and shrink on a loop driven by the real easing functions at the configured
+ * speeds. Overshooting curves visibly push past their resting size and settle back.
  *
- * <p>This is drawn rather than shipped as animated images on purpose. Minecraft has no GIF
- * decoder, and pre-rendered clips for every curve would be a pile of assets that could silently
- * drift from {@link ZoomTransition}. Plotting the real function cannot disagree with it.
+ * <p>Drawn rather than shipped as animated images: Minecraft has no GIF decoder, and pre-rendered
+ * clips for every curve could silently drift from {@link ZoomTransition}.
  */
 @Environment(EnvType.CLIENT)
 public class EasingPreviewEntry extends TooltipListEntry<Object> {
 
-    private static final int GRAPH_HEIGHT = 46;
-    private static final int GRAPH_GAP = 8;
-    private static final int LABEL_HEIGHT = 11;
+    private static final int BOX_WIDTH = 118;
+    private static final int BOX_HEIGHT = 40;
+    private static final int ROW_PADDING = 4;
 
     /** Pause at each end of the loop, in milliseconds, so the ends are readable. */
-    private static final long HOLD_MS = 450L;
+    private static final long HOLD_MS = 400L;
 
-    /** Curves overshoot, so the plot covers a little beyond 0..1 to keep the whole shape visible. */
-    private static final double PLOT_MIN = -0.25;
-    private static final double PLOT_MAX = 1.4;
+    /** How much the preview shapes grow at full zoom. Purely visual. */
+    private static final double PREVIEW_GAIN = 2.4;
 
     private final Supplier<ZoomTransition.Type> inType;
     private final Supplier<ZoomTransition.Type> outType;
@@ -60,7 +59,7 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
 
     @Override
     public int getItemHeight() {
-        return LABEL_HEIGHT + GRAPH_HEIGHT + GRAPH_GAP + GRAPH_HEIGHT + 6;
+        return BOX_HEIGHT + ROW_PADDING * 2;
     }
 
     @Override
@@ -98,17 +97,14 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
                                    boolean isHovered, float delta) {
         Font font = Minecraft.getInstance().font;
 
-        int width = Math.max(80, entryWidth - 12);
-        int left = x;
-
-        // Ticks to travel, converted to milliseconds, so the preview runs at the real speed.
+        // Ticks to travel, converted to milliseconds, so the loop runs at the configured speed.
         double inTicks = 1.0 / Math.max(0.05, inSpeed.getAsDouble());
         double outTicks = 1.0 / Math.max(0.05, outSpeed.getAsDouble());
         long inMs = (long) (inTicks * 50.0);
         long outMs = (long) (outTicks * 50.0);
-        long cycle = inMs + HOLD_MS + outMs + HOLD_MS;
+        long cycle = Math.max(1L, inMs + HOLD_MS + outMs + HOLD_MS);
 
-        long now = System.currentTimeMillis() % Math.max(1L, cycle);
+        long now = System.currentTimeMillis() % cycle;
 
         boolean phaseOut;
         double progress;
@@ -126,65 +122,68 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
             progress = 0.0;
         }
 
-        int graphY = y + LABEL_HEIGHT;
-        drawCurve(extractor, font, left, graphY, width, "Zoom in", inType.get(), inTicks,
-            phaseOut ? -1.0 : progress);
+        ZoomTransition.Type curve = ZoomTransition.normalize(phaseOut ? outType.get() : inType.get());
+        double eased = ZoomTransition.apply(progress, curve);
 
-        int outY = graphY + GRAPH_HEIGHT + GRAPH_GAP;
-        drawCurve(extractor, font, left, outY, width, "Zoom out", outType.get(), outTicks,
-            phaseOut ? progress : -1.0);
+        int boxLeft = x + entryWidth - BOX_WIDTH;
+        int boxTop = y + ROW_PADDING;
+
+        extractor.text(font, this.getFieldName(), x, y + (getItemHeight() - font.lineHeight) / 2,
+            this.getPreferredTextColor(), false);
+
+        String caption = String.format(Locale.US, "%s  %s",
+            phaseOut ? "out" : "in", curve.getDisplayName());
+        int captionWidth = font.width(caption);
+        extractor.text(font, caption, boxLeft - captionWidth - 8,
+            y + (getItemHeight() - font.lineHeight) / 2, 0xFF999999, false);
+
+        drawViewport(extractor, boxLeft, boxTop, eased);
     }
 
-    /**
-     * Plots one curve. {@code marker} is the progress of the animated dot, or negative when this
-     * curve is not the one currently running.
-     */
-    private void drawCurve(GuiGraphicsExtractor extractor, Font font, int left, int top, int width,
-                           String label, ZoomTransition.Type type, double ticks, double marker) {
-        ZoomTransition.Type curve = ZoomTransition.normalize(type);
+    /** A framed scene whose contents scale with the eased value, so the curve is felt not read. */
+    private void drawViewport(GuiGraphicsExtractor extractor, int left, int top, double eased) {
+        int right = left + BOX_WIDTH;
+        int bottom = top + BOX_HEIGHT;
 
-        int bottom = top + GRAPH_HEIGHT;
+        extractor.fill(left, top, right, bottom, 0xFF101014);
+        extractor.fill(left, top, right, top + 1, 0x80FFFFFF);
+        extractor.fill(left, bottom - 1, right, bottom, 0x80FFFFFF);
+        extractor.fill(left, top, left + 1, bottom, 0x80FFFFFF);
+        extractor.fill(right - 1, top, right, bottom, 0x80FFFFFF);
 
-        extractor.fill(left, top, left + width, bottom, 0x40000000);
-        extractor.fill(left, top, left + width, top + 1, 0x60FFFFFF);
-        extractor.fill(left, bottom - 1, left + width, bottom, 0x60FFFFFF);
+        int centerX = (left + right) / 2;
+        int centerY = (top + bottom) / 2;
 
-        // Guides for the 0 and 1 levels, since the overshooting curves cross them.
-        int zeroY = valueToY(0.0, top, bottom);
-        int oneY = valueToY(1.0, top, bottom);
-        for (int gx = left + 2; gx < left + width - 2; gx += 4) {
-            extractor.fill(gx, zeroY, gx + 2, zeroY + 1, 0x30FFFFFF);
-            extractor.fill(gx, oneY, gx + 2, oneY + 1, 0x30FFFFFF);
+        // Overshoot is allowed to push past 1.0 here on purpose - that is the whole point of
+        // previewing BACK and ELASTIC - so the shapes are clipped to the frame instead.
+        double scale = 1.0 + eased * PREVIEW_GAIN;
+
+        // A horizon, so growth reads as moving closer rather than a shape merely resizing.
+        int horizonY = centerY + (int) Math.round(6 * scale);
+        if (horizonY > top + 1 && horizonY < bottom - 1) {
+            extractor.fill(left + 1, horizonY, right - 1, horizonY + 1, 0x40FFFFFF);
         }
 
-        int plotLeft = left + 3;
-        int plotWidth = Math.max(1, width - 6);
+        drawClippedBox(extractor, centerX, centerY, (int) Math.round(9 * scale),
+            (int) Math.round(9 * scale), left, top, right, bottom, 0xFF5B8CD6);
 
-        for (int px = 0; px < plotWidth; px++) {
-            double t = (double) px / (plotWidth - 1);
-            int py = valueToY(ZoomTransition.apply(t, curve), top, bottom);
-            extractor.fill(plotLeft + px, py, plotLeft + px + 1, py + 1, 0xFF7FC7FF);
-        }
-
-        if (marker >= 0.0) {
-            double clamped = Math.max(0.0, Math.min(1.0, marker));
-            int mx = plotLeft + (int) (clamped * (plotWidth - 1));
-            int my = valueToY(ZoomTransition.apply(clamped, curve), top, bottom);
-
-            // Vertical tracker plus a dot, so the position reads at a glance.
-            extractor.fill(mx, top + 1, mx + 1, bottom - 1, 0x40FFFFFF);
-            extractor.fill(mx - 1, my - 1, mx + 2, my + 2, 0xFFFFDD55);
-        }
-
-        String caption = String.format(Locale.US, "%s  -  %s  (%.0f ticks)",
-            label, curve.getDisplayName(), ticks);
-        extractor.text(font, caption, left, top - LABEL_HEIGHT + 2, 0xFFBBBBBB, false);
+        int satelliteOffset = (int) Math.round(22 * scale);
+        drawClippedBox(extractor, centerX - satelliteOffset, centerY - (int) Math.round(4 * scale),
+            (int) Math.round(4 * scale), (int) Math.round(4 * scale), left, top, right, bottom, 0xFF3E6699);
+        drawClippedBox(extractor, centerX + satelliteOffset, centerY + (int) Math.round(2 * scale),
+            (int) Math.round(5 * scale), (int) Math.round(5 * scale), left, top, right, bottom, 0xFF3E6699);
     }
 
-    private static int valueToY(double value, int top, int bottom) {
-        double normalised = (value - PLOT_MIN) / (PLOT_MAX - PLOT_MIN);
-        normalised = Math.max(0.0, Math.min(1.0, normalised));
-        int usable = (bottom - top) - 4;
-        return bottom - 2 - (int) Math.round(normalised * usable);
+    /** fill() does not clip, so anything spilling past the frame is trimmed by hand. */
+    private void drawClippedBox(GuiGraphicsExtractor extractor, int centerX, int centerY,
+                                int halfWidth, int halfHeight,
+                                int clipLeft, int clipTop, int clipRight, int clipBottom, int color) {
+        int x1 = Math.max(clipLeft + 1, centerX - halfWidth);
+        int y1 = Math.max(clipTop + 1, centerY - halfHeight);
+        int x2 = Math.min(clipRight - 1, centerX + halfWidth);
+        int y2 = Math.min(clipBottom - 1, centerY + halfHeight);
+
+        if (x2 <= x1 || y2 <= y1) return;
+        extractor.fill(x1, y1, x2, y2, color);
     }
 }
