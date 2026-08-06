@@ -1,6 +1,7 @@
 package com.jom3a.zoomrgy.gametest;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.jom3a.zoomrgy.HudAnchor;
 import com.jom3a.zoomrgy.ZoomConfig;
 import com.jom3a.zoomrgy.ZoomKeyBindings;
 import com.jom3a.zoomrgy.ZoomState;
@@ -35,6 +36,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             testScrollLevelClampedToMax(context);
             testScrollIgnoredWhileScreenOpen(context);
             testFovStaysPositiveWithOvershootEasing(context);
+            testHudRendersAtEveryAnchor(context);
 
             // Deliberately leave the world at full zoom - see the assertion below.
             context.getInput().holdKey(ZoomKeyBindings.ZOOM_KEY);
@@ -79,6 +81,8 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             cfg.maxScrollLevel = 0;
             cfg.transitionType = null;
             cfg.zoomSpeed = Double.NaN;
+            cfg.hudAnchor = null;
+            cfg.hudScale = Double.NaN;
 
             ZoomConfig.sanitize();
 
@@ -86,11 +90,66 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             assertTrue(cfg.maxScrollLevel >= 1, "maxScrollLevel must be at least 1, was " + cfg.maxScrollLevel);
             assertTrue(cfg.transitionType != null, "transitionType must not stay null");
             assertTrue(Double.isFinite(cfg.zoomSpeed), "zoomSpeed must be finite, was " + cfg.zoomSpeed);
+            assertTrue(cfg.hudAnchor != null, "hudAnchor must not stay null");
+            assertTrue(cfg.hudScale > 0.0, "hudScale must be positive, was " + cfg.hudScale);
         } finally {
             cfg.zoomMultiplier = zoomMultiplier;
             cfg.maxScrollLevel = maxScrollLevel;
             cfg.transitionType = transitionType;
             cfg.zoomSpeed = zoomSpeed;
+            ZoomConfig.sanitize();
+        }
+    }
+
+    /**
+     * Smoke test for the anchored HUD. Rendering happens on the render thread, so anything that
+     * throws in there takes the whole client down - surviving every anchor at both scale extremes
+     * with the telemetry line on is the assertion.
+     */
+    private void testHudRendersAtEveryAnchor(ClientGameTestContext context) {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+
+        HudAnchor anchor = cfg.hudAnchor;
+        double scale = cfg.hudScale;
+        int offsetX = cfg.hudOffsetX;
+        int offsetY = cfg.hudOffsetY;
+        boolean showHud = cfg.showZoomHud;
+        boolean telemetry = cfg.showTelemetryHud;
+        boolean background = cfg.zoomHudBackground;
+
+        try {
+            context.runOnClient(mc -> {
+                cfg.showZoomHud = true;
+                cfg.showTelemetryHud = true;
+                cfg.zoomHudBackground = true;
+                ZoomState.isZoomLocked = true;
+            });
+            context.waitFor(mc -> ZoomState.currentZoom >= 1.0);
+
+            for (HudAnchor candidate : HudAnchor.values()) {
+                context.runOnClient(mc -> {
+                    cfg.hudAnchor = candidate;
+                    cfg.hudScale = 0.5;
+                    cfg.hudOffsetX = 40;
+                    cfg.hudOffsetY = -40;
+                });
+                context.waitTicks(2);
+
+                context.runOnClient(mc -> cfg.hudScale = 2.0);
+                context.waitTicks(2);
+            }
+        } finally {
+            context.runOnClient(mc -> {
+                cfg.hudAnchor = anchor;
+                cfg.hudScale = scale;
+                cfg.hudOffsetX = offsetX;
+                cfg.hudOffsetY = offsetY;
+                cfg.showZoomHud = showHud;
+                cfg.showTelemetryHud = telemetry;
+                cfg.zoomHudBackground = background;
+                ZoomState.isZoomLocked = false;
+            });
+            context.waitTicks(25);
         }
     }
 

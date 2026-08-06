@@ -222,6 +222,38 @@ public class ModMenuIntegration implements ModMenuApi {
                 .build());
 
             hudGroup.add(entry
+                .startSelector(Component.literal("HUD Position"), HudAnchor.values(), cfg.hudAnchor == null ? def.hudAnchor : cfg.hudAnchor)
+                .setDefaultValue(def.hudAnchor)
+                .setNameProvider(val -> Component.literal(val.getDisplayName()))
+                .setTooltip(Component.literal("Which edge or corner of the screen the zoom overlay is anchored to."))
+                .setSaveConsumer(val -> cfg.hudAnchor = val)
+                .build());
+
+            hudGroup.add(entry
+                .startIntSlider(Component.literal("HUD Offset X"), cfg.hudOffsetX, -200, 200)
+                .setDefaultValue(def.hudOffsetX)
+                .setTextGetter(val -> Component.literal(val + " px"))
+                .setTooltip(Component.literal("Nudges the overlay horizontally away from its anchor."))
+                .setSaveConsumer(val -> cfg.hudOffsetX = val)
+                .build());
+
+            hudGroup.add(entry
+                .startIntSlider(Component.literal("HUD Offset Y"), cfg.hudOffsetY, -200, 200)
+                .setDefaultValue(def.hudOffsetY)
+                .setTextGetter(val -> Component.literal(val + " px"))
+                .setTooltip(Component.literal("Nudges the overlay vertically away from its anchor."))
+                .setSaveConsumer(val -> cfg.hudOffsetY = val)
+                .build());
+
+            hudGroup.add(entry
+                .startIntSlider(Component.literal("HUD Scale"), (int) Math.round(cfg.hudScale * 100), 50, 200)
+                .setDefaultValue((int) Math.round(def.hudScale * 100))
+                .setTextGetter(val -> Component.literal(val + "%"))
+                .setTooltip(Component.literal("Size of the zoom overlay relative to normal GUI scale."))
+                .setSaveConsumer(val -> cfg.hudScale = val / 100.0)
+                .build());
+
+            hudGroup.add(entry
                 .startColorField(Component.literal("Zoom HUD Text Color"), cfg.zoomHudColor)
                 .setDefaultValue(0xFFFFFF)
                 .setTooltip(Component.literal("Color of the text displayed in the zoom HUD overlay."))

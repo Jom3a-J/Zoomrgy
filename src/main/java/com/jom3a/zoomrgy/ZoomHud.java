@@ -57,31 +57,66 @@ public final class ZoomHud {
         int labelWidth = font.width(label);
         int telemetryWidth = telemetry.isEmpty() ? 0 : font.width(telemetry);
 
-        // Slide the panel up slightly as the zoom comes in.
-        int slide = (int) ((1.0 - renderZoom) * 10.0);
+        int panelWidth = Math.max(labelWidth, telemetryWidth);
+        int panelHeight = telemetry.isEmpty() ? lineHeight : lineHeight * 2 + LINE_GAP;
 
-        int labelX = (extractor.guiWidth() - labelWidth) / 2;
-        int labelY = extractor.guiHeight() - 60 - lineHeight + slide;
-        int telemetryX = (extractor.guiWidth() - telemetryWidth) / 2;
+        HudAnchor anchor = cfg.hudAnchor == null ? HudAnchor.BOTTOM_CENTER : cfg.hudAnchor;
+        float scale = (float) cfg.hudScale;
+
+        // Everything below is laid out in unscaled space around the origin, then the matrix moves
+        // it to the anchor. That keeps the layout arithmetic independent of position and scale.
+        float originX = extractor.guiWidth() * anchor.horizontal() + cfg.hudOffsetX;
+        float originY = extractor.guiHeight() * anchor.vertical() + cfg.hudOffsetY;
+
+        // Slide the panel towards its anchor edge as the zoom comes in.
+        float slide = (float) ((1.0 - renderZoom) * 10.0) * (anchor.vertical() >= 0.5f ? 1.0f : -1.0f);
+
+        int localX;
+        if (anchor.isHorizontallyCentered()) {
+            localX = -panelWidth / 2;
+        } else if (anchor.isRightAligned()) {
+            localX = -panelWidth;
+        } else {
+            localX = 0;
+        }
+        int localY = (int) (-panelHeight * anchor.vertical());
+
+        int labelX = localX + alignOffset(anchor, panelWidth, labelWidth);
+        int telemetryX = localX + alignOffset(anchor, panelWidth, telemetryWidth);
+        int labelY = localY;
         int telemetryY = labelY + lineHeight + LINE_GAP;
 
         int alpha = (int) (renderZoom * 255.0) & 0xFF;
         int textColor = (cfg.zoomHudColor & 0xFFFFFF) | (alpha << 24);
 
-        if (cfg.zoomHudBackground) {
-            int left = (telemetry.isEmpty() ? labelX : Math.min(labelX, telemetryX)) - PADDING_X;
-            int right = (telemetry.isEmpty() ? labelX + labelWidth
-                : Math.max(labelX + labelWidth, telemetryX + telemetryWidth)) + PADDING_X;
-            int top = labelY - PADDING_Y;
-            int bottom = (telemetry.isEmpty() ? labelY + lineHeight : telemetryY + lineHeight) + PADDING_Y;
+        extractor.pose().pushMatrix();
+        extractor.pose().translate(originX, originY + slide);
+        if (scale != 1.0f) {
+            extractor.pose().scale(scale, scale);
+        }
 
-            drawPanel(extractor, left, top, right, bottom, renderZoom);
+        if (cfg.zoomHudBackground) {
+            drawPanel(extractor,
+                localX - PADDING_X,
+                localY - PADDING_Y,
+                localX + panelWidth + PADDING_X,
+                localY + panelHeight + PADDING_Y,
+                renderZoom);
         }
 
         extractor.text(font, label, labelX, labelY, textColor, true);
         if (!telemetry.isEmpty()) {
             extractor.text(font, telemetry, telemetryX, telemetryY, textColor, true);
         }
+
+        extractor.pose().popMatrix();
+    }
+
+    /** Keeps the two lines aligned with each other the same way the panel meets its anchor. */
+    private static int alignOffset(HudAnchor anchor, int panelWidth, int lineWidth) {
+        if (anchor.isHorizontallyCentered()) return (panelWidth - lineWidth) / 2;
+        if (anchor.isRightAligned()) return panelWidth - lineWidth;
+        return 0;
     }
 
     private static void drawPanel(GuiGraphicsExtractor extractor, int left, int top, int right, int bottom, double renderZoom) {
