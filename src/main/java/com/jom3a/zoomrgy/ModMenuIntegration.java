@@ -16,8 +16,8 @@ public class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         return parent -> {
-            // Grab the frame behind the screen so the easing preview has real imagery to zoom.
-            ZoomPreviewSnapshot.capture();
+            // Reads the stored preview picture, taking one from the game the first time.
+            ZoomPreviewImage.ensureAvailable();
 
             ZoomConfig.Config cfg = ZoomConfig.get();
             ZoomConfig.Config def = ZoomConfig.defaults();

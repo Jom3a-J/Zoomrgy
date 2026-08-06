@@ -138,7 +138,7 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
         extractor.text(font, caption, boxLeft - captionWidth - 8,
             y + (getItemHeight() - font.lineHeight) / 2, 0xFF999999, false);
 
-        if (ZoomPreviewSnapshot.isReady()) {
+        if (ZoomPreviewImage.isReady()) {
             drawSnapshot(extractor, boxLeft, boxTop, eased);
         } else {
             drawViewport(extractor, boxLeft, boxTop, eased);
@@ -150,8 +150,8 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
      * to the image: a narrower field of view magnifying the middle.
      */
     private void drawSnapshot(GuiGraphicsExtractor extractor, int left, int top, double eased) {
-        int texWidth = ZoomPreviewSnapshot.width();
-        int texHeight = ZoomPreviewSnapshot.height();
+        int texWidth = ZoomPreviewImage.width();
+        int texHeight = ZoomPreviewImage.height();
 
         // Overshooting curves push past 1.0, which simply crops in further - exactly the
         // overshoot they produce in game.
@@ -167,7 +167,7 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
         float u = (texWidth - regionWidth) / 2.0f;
         float v = (texHeight - regionHeight) / 2.0f;
 
-        extractor.blit(RenderPipelines.GUI_TEXTURED, ZoomPreviewSnapshot.textureId(),
+        extractor.blit(RenderPipelines.GUI_TEXTURED, ZoomPreviewImage.textureId(),
             left, top, u, v, BOX_WIDTH, BOX_HEIGHT, regionWidth, regionHeight, texWidth, texHeight);
 
         // Frame it so it reads as a viewport rather than a floating image.
