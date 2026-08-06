@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 
 import java.util.Collections;
@@ -137,7 +138,45 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
         extractor.text(font, caption, boxLeft - captionWidth - 8,
             y + (getItemHeight() - font.lineHeight) / 2, 0xFF999999, false);
 
-        drawViewport(extractor, boxLeft, boxTop, eased);
+        if (ZoomPreviewSnapshot.isReady()) {
+            drawSnapshot(extractor, boxLeft, boxTop, eased);
+        } else {
+            drawViewport(extractor, boxLeft, boxTop, eased);
+        }
+    }
+
+    /**
+     * Crops into the captured frame as the eased value rises, which is what zooming actually does
+     * to the image: a narrower field of view magnifying the middle.
+     */
+    private void drawSnapshot(GuiGraphicsExtractor extractor, int left, int top, double eased) {
+        int texWidth = ZoomPreviewSnapshot.width();
+        int texHeight = ZoomPreviewSnapshot.height();
+
+        // Overshooting curves push past 1.0, which simply crops in further - exactly the
+        // overshoot they produce in game.
+        double zoom = Math.max(1.0, 1.0 + eased * PREVIEW_GAIN);
+
+        double boxAspect = (double) BOX_WIDTH / BOX_HEIGHT;
+
+        // Take the full width at rest and a matching slice of height, so the image is never
+        // stretched to fit the wide preview box.
+        int regionWidth = (int) Math.max(1, Math.round(texWidth / zoom));
+        int regionHeight = (int) Math.max(1, Math.round(Math.min(texHeight, texWidth / boxAspect) / zoom));
+
+        float u = (texWidth - regionWidth) / 2.0f;
+        float v = (texHeight - regionHeight) / 2.0f;
+
+        extractor.blit(RenderPipelines.GUI_TEXTURED, ZoomPreviewSnapshot.textureId(),
+            left, top, u, v, BOX_WIDTH, BOX_HEIGHT, regionWidth, regionHeight, texWidth, texHeight);
+
+        // Frame it so it reads as a viewport rather than a floating image.
+        int right = left + BOX_WIDTH;
+        int bottom = top + BOX_HEIGHT;
+        extractor.fill(left, top, right, top + 1, 0x80FFFFFF);
+        extractor.fill(left, bottom - 1, right, bottom, 0x80FFFFFF);
+        extractor.fill(left, top, left + 1, bottom, 0x80FFFFFF);
+        extractor.fill(right - 1, top, right, bottom, 0x80FFFFFF);
     }
 
     /** A framed scene whose contents scale with the eased value, so the curve is felt not read. */
