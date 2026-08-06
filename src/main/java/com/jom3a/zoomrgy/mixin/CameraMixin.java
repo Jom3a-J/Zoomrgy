@@ -1,8 +1,8 @@
-package com.yourname.zoomrgy.mixin;
+package com.jom3a.zoomrgy.mixin;
 
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomState;
-import com.yourname.zoomrgy.ZoomTransition;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomTransition;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
@@ -47,7 +47,7 @@ public abstract class CameraMixin {
 
         // Update targeted entity on render frame for smooth glowing outline
         if (cfg.highlightTargetEntity && mc.level != null) {
-            net.minecraft.world.phys.HitResult hit = com.yourname.zoomrgy.ZoomHandler.customRaycast(mc, 150.0, partialTick);
+            net.minecraft.world.phys.HitResult hit = com.jom3a.zoomrgy.ZoomHandler.customRaycast(mc, 150.0, partialTick);
             if (hit instanceof net.minecraft.world.phys.EntityHitResult entityHit) {
                 ZoomState.targetedEntity = entityHit.getEntity();
             } else {

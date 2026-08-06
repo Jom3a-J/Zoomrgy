@@ -1,4 +1,4 @@
-package com.yourname.zoomrgy;
+package com.jom3a.zoomrgy;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;

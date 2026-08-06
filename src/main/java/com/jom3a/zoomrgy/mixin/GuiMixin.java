@@ -1,8 +1,8 @@
-package com.yourname.zoomrgy.mixin;
+package com.jom3a.zoomrgy.mixin;
 
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomState;
-import com.yourname.zoomrgy.ZoomTransition;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomTransition;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -114,7 +114,7 @@ public abstract class GuiMixin {
         // Construct telemetry string
         String telemetry = "";
         if (cfg.showTelemetryHud) {
-            net.minecraft.world.phys.HitResult hit = com.yourname.zoomrgy.ZoomHandler.customRaycast(mc, 150.0, deltaTracker.getGameTimeDeltaPartialTick(true));
+            net.minecraft.world.phys.HitResult hit = com.jom3a.zoomrgy.ZoomHandler.customRaycast(mc, 150.0, deltaTracker.getGameTimeDeltaPartialTick(true));
             if (hit != null && hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS) {
                 double distance = 0.0;
                 String targetName = "";

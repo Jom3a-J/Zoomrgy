@@ -1,4 +1,4 @@
-package com.yourname.zoomrgy;
+package com.jom3a.zoomrgy;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -132,7 +132,7 @@ public class ZoomConfig {
         @Deprecated
         public double  zoomedFov             = 15.0;
         public double  zoomSpeed             = 0.1;
-        public ZoomTransition.Type transitionType = ZoomTransition.Type.EASE_IN_OUT_SINE;
+        public ZoomTransition.Type transitionType = ZoomTransition.Type.SMOOTHSTEP;
 
         @Deprecated
         public double  zoomInSpeed           = 0.1;
@@ -159,7 +159,7 @@ public class ZoomConfig {
         public boolean zoomHudBackground     = true;
         public int     zoomHudColor          = 0xFFFFFF;
         public boolean reduceFog             = true;
-        public double  zoomVignetteOpacity   = 0.0;
+        public double  zoomVignetteOpacity   = 0.4;
         public boolean hideCrosshair         = false;
         public boolean hideHotbar            = false;
         public boolean zoomOutOnDamage       = true;

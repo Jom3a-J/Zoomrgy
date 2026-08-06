@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.yourname.zoomrgy.mixin",
+  "package": "com.jom3a.zoomrgy.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
     "CameraMixin",

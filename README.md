@@ -76,7 +76,7 @@ Below is a detailed breakdown of all available settings:
 | In-Game Setting Name | JSON Field Key | Default Value | Description |
 | :--- | :--- | :---: | :--- |
 | **Zoom Speed** | `zoomSpeed` | `0.1` (`10%`) | The rate of transition (interpolation factor). `0.05` is cinematic; `1.0` is instant. |
-| **Transition Type** | `transitionType` | `EASE_IN_OUT_SINE` | The mathematical easing function used to interpolate FOV transitions. |
+| **Transition Type** | `transitionType` | `SMOOTHSTEP` | The mathematical easing function used to interpolate FOV transitions. |
 | **Dynamic Movement Damping**| `movementFovDamping` | `0.8` (`80%`) | Dampens sudden FOV offsets caused by in-game motion (sprinting, flight) to stabilize view. |
 
 ### 🖱 Mouse & Sensitivity
@@ -96,7 +96,7 @@ Below is a detailed breakdown of all available settings:
 | **Show Telemetry HUD** | `showTelemetryHud` | `true` | Shows target name (block/entity) and live distance reading under the crosshair. |
 | **Highlight Targeted Entity**| `highlightTargetEntity`| `true` | Highlights the entity under your crosshair with a glowing client outline. |
 | **Zoom HUD Text Color** | `zoomHudColor` | `0xFFFFFF` | Colour of the text in the zoom HUD overlay. |
-| **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.0` (`OFF`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
+| **Zoom Vignette Opacity** | `zoomVignetteOpacity` | `0.4` (`40%`) | Adds a cinematic dark vignette shadow around screen edges. Set to `0%` to disable. |
 | **Hide Hotbar during Zoom** | `hideHotbar` | `false` | Hides the hotbar and surrounding HUD decorations while zoom is active. |
 | **Reduce Fog during Zoom** | `reduceFog` | `true` | Dynamically pushes environmental fog back during active zoom to maximize sight lines. |
 | **Hide Crosshair during Zoom**| `hideCrosshair` | `false` | Hides the crosshair cursor during active zoom. |

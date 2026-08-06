@@ -11,10 +11,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "com.yourname.zoomrgy.Zoomrgy"
+      "com.jom3a.zoomrgy.Zoomrgy"
     ],
     "modmenu": [
-      "com.yourname.zoomrgy.ModMenuIntegration"
+      "com.jom3a.zoomrgy.ModMenuIntegration"
     ]
   },
   "mixins": [

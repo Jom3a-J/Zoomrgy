@@ -1,7 +1,7 @@
-package com.yourname.zoomrgy.mixin;
+package com.jom3a.zoomrgy.mixin;
 
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.entity.Entity;

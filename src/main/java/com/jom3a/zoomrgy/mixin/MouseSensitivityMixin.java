@@ -1,7 +1,7 @@
-package com.yourname.zoomrgy.mixin;
+package com.jom3a.zoomrgy.mixin;
 
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MouseHandler;
@@ -33,7 +33,7 @@ public abstract class MouseSensitivityMixin {
         // Follow the same easing curve the FOV itself uses. Scaling by the raw linear ramp
         // instead would desync sensitivity from what you actually see mid-transition - badly
         // so for the exponential and elastic curves.
-        double eased = com.yourname.zoomrgy.ZoomTransition.apply(
+        double eased = com.jom3a.zoomrgy.ZoomTransition.apply(
             ZoomState.currentZoom, ZoomConfig.get().transitionType);
 
         double scale = Math.max(0.01, 1.0 + (fovRatio - 1.0) * eased);

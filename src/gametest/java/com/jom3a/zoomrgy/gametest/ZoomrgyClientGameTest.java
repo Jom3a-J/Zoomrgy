@@ -1,10 +1,10 @@
-package com.yourname.zoomrgy.gametest;
+package com.jom3a.zoomrgy.gametest;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomKeyBindings;
-import com.yourname.zoomrgy.ZoomState;
-import com.yourname.zoomrgy.ZoomTransition;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomKeyBindings;
+import com.jom3a.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomTransition;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;

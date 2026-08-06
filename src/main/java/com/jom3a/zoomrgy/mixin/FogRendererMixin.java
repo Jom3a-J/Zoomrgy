@@ -1,7 +1,7 @@
-package com.yourname.zoomrgy.mixin;
+package com.jom3a.zoomrgy.mixin;
 
-import com.yourname.zoomrgy.ZoomConfig;
-import com.yourname.zoomrgy.ZoomState;
+import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
@@ -22,7 +22,7 @@ public abstract class FogRendererMixin {
     private static void onSetupFog(Camera camera, int fogType, DeltaTracker deltaTracker, float farPlaneDistance, ClientLevel level, CallbackInfoReturnable<FogData> info) {
         if (!ZoomConfig.get().reduceFog) return;
 
-        double renderZoom = com.yourname.zoomrgy.ZoomHandler.lerp(
+        double renderZoom = com.jom3a.zoomrgy.ZoomHandler.lerp(
             ZoomState.lastZoom,
             ZoomState.currentZoom,
             (double) deltaTracker.getGameTimeDeltaPartialTick(true)

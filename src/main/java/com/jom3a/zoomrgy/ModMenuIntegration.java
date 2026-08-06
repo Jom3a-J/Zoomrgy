@@ -1,4 +1,4 @@
-package com.yourname.zoomrgy;
+package com.jom3a.zoomrgy;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;

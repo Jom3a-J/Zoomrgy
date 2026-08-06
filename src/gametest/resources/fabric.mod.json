@@ -6,7 +6,7 @@
   "environment": "client",
   "entrypoints": {
     "fabric-client-gametest": [
-      "com.yourname.zoomrgy.gametest.ZoomrgyClientGameTest"
+      "com.jom3a.zoomrgy.gametest.ZoomrgyClientGameTest"
     ]
   },
   "depends": {
