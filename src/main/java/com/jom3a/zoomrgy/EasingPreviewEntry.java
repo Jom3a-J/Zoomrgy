@@ -31,9 +31,12 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public class EasingPreviewEntry extends TooltipListEntry<Object> {
 
-    private static final int BOX_WIDTH = 118;
-    private static final int BOX_HEIGHT = 40;
-    private static final int ROW_PADDING = 4;
+    // Sized to occupy the right half of the row. Cloth's list spans the full width of the screen,
+    // so a genuinely side-by-side panel would sit on top of the setting widgets; a large
+    // right-aligned panel is the same split within the space the list actually leaves.
+    private static final int BOX_WIDTH = 176;
+    private static final int BOX_HEIGHT = 99; // 16:9
+    private static final int ROW_PADDING = 5;
 
     /** Pause at each end of the loop, in milliseconds, so the ends are readable. */
     private static final long HOLD_MS = 400L;
@@ -129,14 +132,13 @@ public class EasingPreviewEntry extends TooltipListEntry<Object> {
         int boxLeft = x + entryWidth - BOX_WIDTH;
         int boxTop = y + ROW_PADDING;
 
-        extractor.text(font, this.getFieldName(), x, y + (getItemHeight() - font.lineHeight) / 2,
-            this.getPreferredTextColor(), false);
+        // Label and running state stacked on the left, preview panel on the right.
+        int textTop = y + (getItemHeight() - font.lineHeight * 2 - 3) / 2;
+        extractor.text(font, this.getFieldName(), x, textTop, this.getPreferredTextColor(), false);
 
         String caption = String.format(Locale.US, "%s  %s",
-            phaseOut ? "out" : "in", curve.getDisplayName());
-        int captionWidth = font.width(caption);
-        extractor.text(font, caption, boxLeft - captionWidth - 8,
-            y + (getItemHeight() - font.lineHeight) / 2, 0xFF999999, false);
+            phaseOut ? "zooming out" : "zooming in", curve.getDisplayName());
+        extractor.text(font, caption, x, textTop + font.lineHeight + 3, 0xFF999999, false);
 
         if (ZoomPreviewImage.isReady()) {
             drawSnapshot(extractor, boxLeft, boxTop, eased);

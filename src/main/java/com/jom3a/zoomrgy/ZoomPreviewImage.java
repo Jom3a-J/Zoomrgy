@@ -48,14 +48,59 @@ public final class ZoomPreviewImage {
     /** Set once we have tried to grab a picture this session, successfully or not. */
     private static boolean captureAttempted;
 
+    private static Path loadedFrom;
+    private static long loadedStamp;
+
     /**
-     * Makes the stored picture available to the config screen. Only ever reads from disk - taking
-     * a picture here would capture the menu that is already on screen, since the GUI is drawn into
-     * the same render target as the world.
+     * Makes a picture available to the config screen, preferring your most recent screenshot so
+     * pressing F2 on a view you like is enough to make it the preview.
+     *
+     * <p>Only ever reads from disk. Taking a picture here would capture the menu already on
+     * screen, since the GUI is drawn into the same render target as the world.
      */
     public static void ensureAvailable() {
-        if (texture != null || capturePending) return;
-        loadFromDisk();
+        if (capturePending) return;
+
+        Path source = newestScreenshot();
+        if (source == null && Files.isRegularFile(IMAGE_PATH)) {
+            source = IMAGE_PATH;
+        }
+        if (source == null) return;
+
+        long stamp = lastModified(source);
+        if (texture != null && source.equals(loadedFrom) && stamp == loadedStamp) {
+            return; // Already showing this exact file.
+        }
+
+        if (loadFrom(source)) {
+            loadedFrom = source;
+            loadedStamp = stamp;
+        }
+    }
+
+    /** The newest image in the screenshots folder, or null when there are none. */
+    private static Path newestScreenshot() {
+        Path dir = FabricLoader.getInstance().getGameDir().resolve("screenshots");
+        if (!Files.isDirectory(dir)) return null;
+
+        try (java.util.stream.Stream<Path> files = Files.list(dir)) {
+            return files
+                .filter(Files::isRegularFile)
+                .filter(p -> p.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(".png"))
+                .max(java.util.Comparator.comparingLong(ZoomPreviewImage::lastModified))
+                .orElse(null);
+        } catch (Exception e) {
+            LOGGER.warn("Could not read the screenshots folder", e);
+            return null;
+        }
+    }
+
+    private static long lastModified(Path path) {
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 
     /**
@@ -71,14 +116,12 @@ public final class ZoomPreviewImage {
         capture();
     }
 
-    private static boolean loadFromDisk() {
-        if (!Files.isRegularFile(IMAGE_PATH)) return false;
-
-        try (InputStream in = Files.newInputStream(IMAGE_PATH)) {
+    private static boolean loadFrom(Path path) {
+        try (InputStream in = Files.newInputStream(path)) {
             install(NativeImage.read(in));
             return texture != null;
         } catch (Exception e) {
-            LOGGER.warn("Could not read the preview image at {}", IMAGE_PATH, e);
+            LOGGER.warn("Could not read the preview image at {}", path, e);
             return false;
         }
     }
