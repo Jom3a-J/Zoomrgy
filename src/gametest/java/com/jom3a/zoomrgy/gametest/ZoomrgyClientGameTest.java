@@ -39,6 +39,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             testScrollIgnoredWhileScreenOpen(context);
             testFovStaysPositiveWithOvershootEasing(context);
             testHudRendersAtEveryAnchor(context);
+            testReleaseDoesNotSnapOutward(context);
 
             // Deliberately leave the world at full zoom - see the assertion below.
             context.getInput().holdKey(ZoomKeyBindings.ZOOM_KEY);
@@ -408,6 +409,72 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
                 ZoomState.resetScrollLevels();
             });
             context.waitTicks(25); // let the zoom settle back out
+        }
+    }
+
+    /**
+     * Releasing the zoom key must not jog the magnification back up on its way out.
+     *
+     * <p>The scroll level used to be cleared the instant the key came up, and the preset flags
+     * flipped in the same tick, so the target FOV leapt from the scrolled magnification to the
+     * preset's base level before the fade-out had started. On screen that read as a snap outwards
+     * followed by the real zoom-out. Magnification should only ever fall while releasing.
+     */
+    private void testReleaseDoesNotSnapOutward(ClientGameTestContext context) {
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        int maxScrollLevel = cfg.maxScrollLevel;
+        double zoomSpeed = cfg.zoomSpeed;
+
+        try {
+            context.runOnClient(mc -> {
+                cfg.maxScrollLevel = 20;
+                cfg.zoomSpeed = 0.05; // ~20 ticks out, so the fade has plenty of samples
+            });
+
+            context.getInput().holdKey(ZoomKeyBindings.ZOOM_KEY);
+            context.waitFor(mc -> ZoomState.currentZoom >= 1.0);
+
+            // Scroll well past the base level, so a reset-on-release is clearly visible.
+            context.runOnClient(mc -> ZoomState.setScrollLevel(8));
+            context.waitTicks(3);
+
+            double zoomed = context.computeOnClient(mc -> ZoomState.getMagnification(ZoomState.currentZoom));
+            assertTrue(zoomed > 1.0, "expected to be magnified before releasing, was " + zoomed);
+
+            context.getInput().releaseKey(ZoomKeyBindings.ZOOM_KEY);
+
+            // The snap is a sudden collapse, not a rise, so look for a discontinuity: the first
+            // frame of the fade-out must still be near where the zoom actually was. A smooth
+            // release loses well under half the magnification in one tick, whereas dropping the
+            // scroll level or the preset early lands straight on the base level or on 1x.
+            double firstStep = -1.0;
+            for (int i = 0; i < 10; i++) {
+                context.waitTick();
+                double[] sample = context.computeOnClient(mc ->
+                    new double[]{ZoomState.currentZoom, ZoomState.getMagnification(ZoomState.currentZoom)});
+                if (sample[0] < 1.0) {
+                    firstStep = sample[1];
+                    break;
+                }
+            }
+
+            assertTrue(firstStep > 0.0, "the zoom never started releasing");
+            assertTrue(firstStep >= zoomed * 0.5,
+                "magnification collapsed from " + zoomed + " to " + firstStep
+                    + " in one tick - the view snaps instead of easing out");
+
+            // And it should still make it all the way back out.
+            context.waitFor(mc -> ZoomState.currentZoom <= 0.0);
+            double released = context.computeOnClient(mc -> ZoomState.getMagnification(ZoomState.currentZoom));
+            assertTrue(released <= 1.0, "zoom should have fully released, magnification was " + released);
+        } finally {
+            context.getInput().releaseKey(ZoomKeyBindings.ZOOM_KEY);
+            context.runOnClient(mc -> {
+                cfg.maxScrollLevel = maxScrollLevel;
+                cfg.zoomSpeed = zoomSpeed;
+                ZoomState.resetScrollLevels();
+            });
+            context.waitTicks(25);
         }
     }
 

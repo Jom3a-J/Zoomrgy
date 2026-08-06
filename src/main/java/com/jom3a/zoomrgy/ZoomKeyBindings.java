@@ -22,7 +22,6 @@ public class ZoomKeyBindings {
     private static long lastPressTime = 0;
     private static boolean wasPressingPreset2 = false;
     private static long lastPressTimePreset2 = 0;
-    private static boolean wasActive = false;
 
     public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
         Identifier.fromNamespaceAndPath(Zoomrgy.MOD_ID, "zoomrgy")
@@ -75,7 +74,6 @@ public class ZoomKeyBindings {
                     ZoomState.resetScrollLevels();
                     wasPressing = false;
                     wasPressingPreset2 = false;
-                    wasActive = false;
                 }
                 return;
             }
@@ -192,11 +190,9 @@ public class ZoomKeyBindings {
                 while (ZOOM_OUT_KEY.consumeClick()) {}
             }
 
-            // Reset scroll level on total release
-            if (!activeAfter && wasActive && cfg.resetScrollOnRelease) {
-                ZoomState.resetScrollLevels();
-            }
-            wasActive = activeAfter;
+            // The scroll level is deliberately not reset here. ZoomHandler waits for the
+            // fade-out to finish first, so releasing does not visibly snap the view back to the
+            // base zoom level on its way out.
         });
     }
 }

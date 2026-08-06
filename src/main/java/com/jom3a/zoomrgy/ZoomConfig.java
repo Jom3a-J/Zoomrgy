@@ -37,53 +37,7 @@ public class ZoomConfig {
                     instance = new Config();
                 }
 
-                // Check if key fields were missing in the JSON to drive accurate migration
-                boolean hasZoomSpeed = json != null && json.has("zoomSpeed");
-                boolean hasTransitionType = json != null && json.has("transitionType");
-
-                // Migrate split zoomInSpeed/zoomOutSpeed back to zoomSpeed
-                if (!hasZoomSpeed) {
-                    if (instance.zoomInSpeed != 0.1) {
-                        instance.zoomSpeed = instance.zoomInSpeed;
-                    } else {
-                        instance.zoomSpeed = 0.1;
-                    }
-                }
-                // Migrate split transitionType back to single transitionType
-                if (!hasTransitionType) {
-                    if (instance.zoomInTransition != null) {
-                        instance.transitionType = instance.zoomInTransition;
-                    } else {
-                        instance.transitionType = ZoomTransition.Type.SMOOTHSTEP;
-                    }
-                }
-                // Migrate boolean cinematicCamera to slider cinematicSmoothness
-                if (instance.cinematicCamera) {
-                    if (instance.cinematicSmoothness == 0.0) {
-                        double derived = 1.0 - instance.cinematicCameraMultiplier * 0.5;
-                        instance.cinematicSmoothness = Math.max(0.1, Math.min(0.95, derived));
-                    }
-                    instance.cinematicCamera = false; // Reset to avoid re-migration
-                }
-                if (instance.cinematicCameraMultiplier <= 0.05) {
-                    instance.cinematicCameraMultiplier = 1.0;
-                }
-                // Migrate FOV values to Multipliers
-                if (instance.zoomedFov != 15.0 && instance.zoomMultiplier == 4.5) {
-                    instance.zoomMultiplier = Math.round((70.0 / instance.zoomedFov) * 10.0) / 10.0;
-                }
-                if (instance.zoomedFovPreset2 != 5.0 && instance.zoomMultiplierPreset2 == 14.0) {
-                    instance.zoomMultiplierPreset2 = Math.round((70.0 / instance.zoomedFovPreset2) * 10.0) / 10.0;
-                }
-                if (instance.spyglassZoomFov != 7.0 && instance.spyglassZoomMultiplier == 10.0) {
-                    instance.spyglassZoomMultiplier = Math.round((70.0 / instance.spyglassZoomFov) * 10.0) / 10.0;
-                }
-                // hudOffsetY used to be a raw screen delta, so its default was -60. It is now an
-                // inset measured inwards from the anchored edge; leaving the old value alone would
-                // push a bottom-anchored HUD straight off the bottom of the screen.
-                if (json != null && json.has("hudOffsetY") && instance.hudOffsetY == -60) {
-                    instance.hudOffsetY = 60;
-                }
+                migrate(json);
             } catch (Exception e) {
                 // Malformed JSON throws JsonSyntaxException (unchecked) - letting that escape
                 // onInitializeClient would hard-crash the game on startup. Fall back to defaults
@@ -100,6 +54,89 @@ public class ZoomConfig {
             GSON.toJson(instance, writer);
         } catch (Exception e) {
             LOGGER.error("Failed to write {}", CONFIG_PATH, e);
+        }
+    }
+
+    /**
+     * Upgrades settings written by older versions.
+     *
+     * <p>Legacy values are read straight out of the parsed JSON rather than from fields on
+     * {@link Config}. Keeping them as fields meant every save wrote nine dead keys back out,
+     * which made a hand-edited config confusing to read. Gson simply ignores the old keys now,
+     * so they disappear the first time the config is saved.
+     */
+    private static void migrate(com.google.gson.JsonObject json) {
+        if (json == null) return;
+
+        // zoomInSpeed/zoomOutSpeed were once separate; the single zoomSpeed replaced them.
+        if (!json.has("zoomSpeed")) {
+            Double legacySpeed = readDouble(json, "zoomInSpeed");
+            if (legacySpeed != null) instance.zoomSpeed = legacySpeed;
+        }
+
+        // Likewise for the split zoomInTransition/zoomOutTransition.
+        if (!json.has("transitionType")) {
+            String legacyTransition = readString(json, "zoomInTransition");
+            if (legacyTransition != null) {
+                try {
+                    instance.transitionType = ZoomTransition.Type.valueOf(legacyTransition);
+                } catch (IllegalArgumentException ignored) {
+                    // Unknown name; sanitize() will fall back to the default.
+                }
+            }
+        }
+
+        // The cinematic camera toggle plus its multiplier became one smoothness slider.
+        if (!json.has("cinematicSmoothness") && Boolean.TRUE.equals(readBoolean(json, "cinematicCamera"))) {
+            Double multiplier = readDouble(json, "cinematicCameraMultiplier");
+            double derived = 1.0 - (multiplier == null ? 1.0 : multiplier) * 0.5;
+            instance.cinematicSmoothness = Math.max(0.1, Math.min(0.95, derived));
+        }
+
+        // Absolute zoomed FOV values became magnification multipliers relative to a 70 FOV.
+        migrateFovToMultiplier(json, "zoomedFov", "zoomMultiplier", v -> instance.zoomMultiplier = v);
+        migrateFovToMultiplier(json, "zoomedFovPreset2", "zoomMultiplierPreset2", v -> instance.zoomMultiplierPreset2 = v);
+        migrateFovToMultiplier(json, "spyglassZoomFov", "spyglassZoomMultiplier", v -> instance.spyglassZoomMultiplier = v);
+
+        // hudOffsetY used to be a raw screen delta, so its default was -60. It is now an inset
+        // measured inwards from the anchored edge; leaving the old value alone would push a
+        // bottom-anchored HUD straight off the bottom of the screen.
+        if (json.has("hudOffsetY") && instance.hudOffsetY == -60) {
+            instance.hudOffsetY = 60;
+        }
+    }
+
+    private static void migrateFovToMultiplier(com.google.gson.JsonObject json, String legacyKey,
+                                               String currentKey, java.util.function.DoubleConsumer setter) {
+        if (json.has(currentKey)) return; // Already on the new scheme.
+
+        Double fov = readDouble(json, legacyKey);
+        if (fov == null || fov <= 0.0) return;
+
+        setter.accept(Math.round((70.0 / fov) * 10.0) / 10.0);
+    }
+
+    private static Double readDouble(com.google.gson.JsonObject json, String key) {
+        try {
+            return json.has(key) && json.get(key).isJsonPrimitive() ? json.get(key).getAsDouble() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Boolean readBoolean(com.google.gson.JsonObject json, String key) {
+        try {
+            return json.has(key) && json.get(key).isJsonPrimitive() ? json.get(key).getAsBoolean() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String readString(com.google.gson.JsonObject json, String key) {
+        try {
+            return json.has(key) && json.get(key).isJsonPrimitive() ? json.get(key).getAsString() : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -140,31 +177,17 @@ public class ZoomConfig {
     }
 
     public static class Config {
-        @Deprecated
-        public double  zoomedFov             = 15.0;
         public double  zoomSpeed             = 0.1;
         public ZoomTransition.Type transitionType = ZoomTransition.Type.SMOOTHSTEP;
 
-        @Deprecated
-        public double  zoomInSpeed           = 0.1;
-        @Deprecated
-        public double  zoomOutSpeed          = 0.1;
-        @Deprecated
-        public ZoomTransition.Type zoomInTransition  = ZoomTransition.Type.SMOOTHSTEP;
-        @Deprecated
-        public ZoomTransition.Type zoomOutTransition = ZoomTransition.Type.SMOOTHSTEP;
         public int     maxScrollLevel        = 10;
         /** Proportional size of one scroll notch. 1.3^9 gives roughly the old range at level 10. */
         public double  scrollStepRatio       = 1.3;
         public boolean resetScrollOnRelease  = true;
         public boolean affectHandFov         = true;
-        
-        @Deprecated
-        public boolean cinematicCamera       = false;
-        @Deprecated
-        public double  cinematicCameraMultiplier = 1.0;
-        
-        public double  cinematicSmoothness   = 0.0; // 0.0 = OFF, otherwise smoothness factor (e.g. 0.05 to 0.95)
+
+        /** 0.0 = OFF, otherwise a smoothness factor between roughly 0.05 and 0.95. */
+        public double  cinematicSmoothness   = 0.0;
         public boolean reduceSensitivity     = true;
         public boolean zoomToggleMode        = false;
         public boolean doubleTapToLock       = true;
@@ -188,11 +211,6 @@ public class ZoomConfig {
         public boolean highlightTargetEntity = true;
         public boolean showTelemetryHud      = true;
         public double  movementFovDamping    = 0.8;
-        
-        @Deprecated
-        public double  zoomedFovPreset2      = 5.0;
-        @Deprecated
-        public double  spyglassZoomFov       = 7.0;
 
         public double  zoomMultiplier        = 4.5;
         public double  zoomMultiplierPreset2 = 14.0;

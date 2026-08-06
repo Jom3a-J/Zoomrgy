@@ -87,21 +87,38 @@ public class ZoomState {
         return Math.pow(ZoomConfig.get().scrollStepRatio, getScrollLevel() - 1);
     }
 
+    // Magnification of the zoom currently being displayed, latched while one is engaged and held
+    // through the fade-out. Releasing flips the state flags and clears the scroll level in the
+    // same tick, so reading those live made the target FOV leap back to the primary preset's base
+    // level before the zoom-out had even started - a visible snap on every release.
+    private static double activeMultiplier = 1.0;
+    private static double activeScrollFactor = 1.0;
+
+    /** Re-latches the zoom parameters. Does nothing once the zoom is released, by design. */
+    public static void refreshActiveZoom() {
+        if (!isZoomActive()) return;
+
+        ZoomConfig.Config cfg = ZoomConfig.get();
+        if (isSpyglassActive) {
+            activeMultiplier = cfg.spyglassZoomMultiplier;
+        } else if (isZoomingPreset2) {
+            activeMultiplier = cfg.zoomMultiplierPreset2;
+        } else {
+            activeMultiplier = cfg.zoomMultiplier;
+        }
+        activeScrollFactor = getScrollFactor();
+    }
+
+    /** Clears the latch once nothing is on screen, so the next zoom starts from a clean slate. */
+    public static void clearActiveZoom() {
+        activeMultiplier = 1.0;
+        activeScrollFactor = 1.0;
+    }
+
     public static double getTargetFov() {
         Minecraft mc = Minecraft.getInstance();
         double baseFov = mc.options.fov().get();
-        ZoomConfig.Config cfg = ZoomConfig.get();
-
-        double presetMultiplier;
-        if (isSpyglassActive) {
-            presetMultiplier = cfg.spyglassZoomMultiplier;
-        } else if (isZoomingPreset2) {
-            presetMultiplier = cfg.zoomMultiplierPreset2;
-        } else {
-            presetMultiplier = cfg.zoomMultiplier;
-        }
-
-        return baseFov / (presetMultiplier * getScrollFactor());
+        return baseFov / Math.max(1.0e-4, activeMultiplier * activeScrollFactor);
     }
 
     /**

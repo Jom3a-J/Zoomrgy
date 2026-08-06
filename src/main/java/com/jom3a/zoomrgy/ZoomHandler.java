@@ -27,16 +27,30 @@ public class ZoomHandler {
      * zoomed leaves currentZoom at 1.0, so the next world you join renders fully zoomed in
      * and then animates back out.
      */
+    /** Set while a zoom is engaged, so the scroll reset fires once per release, not every tick. */
+    private static boolean scrollResetPending = false;
+
     private static void resetZoom() {
         ZoomState.currentZoom = 0.0;
         ZoomState.lastZoom = 0.0;
         ZoomState.targetedEntity = null;
+        ZoomState.resetScrollLevels();
+        ZoomState.clearActiveZoom();
+        scrollResetPending = false;
     }
 
     private static void tickZoom() {
         // Keep the scroll levels in range - lowering maxScrollLevel in the config screen
         // would otherwise leave a previously scrolled level stuck above the new maximum.
         ZoomState.clampScrollLevels();
+
+        // Only re-latches while a zoom is engaged, so the fade-out keeps aiming at the same
+        // magnification it was showing rather than jumping to whatever the flags now say.
+        ZoomState.refreshActiveZoom();
+
+        if (ZoomState.isZoomActive()) {
+            scrollResetPending = true;
+        }
 
         ZoomState.lastZoom = ZoomState.currentZoom;
 
@@ -48,6 +62,17 @@ public class ZoomHandler {
             ZoomState.currentZoom = Math.min(target, current + speed);
         } else if (current > target) {
             ZoomState.currentZoom = Math.max(target, current - speed);
+        }
+
+        // Wait for the fade-out to finish before clearing the scroll level. Clearing it the
+        // instant the key comes up moves the target mid-animation, which reads as the view
+        // snapping back to the base zoom level and only then travelling out to normal.
+        if (scrollResetPending && !ZoomState.isZoomActive() && ZoomState.currentZoom <= 0.0) {
+            if (ZoomConfig.get().resetScrollOnRelease) {
+                ZoomState.resetScrollLevels();
+            }
+            ZoomState.clearActiveZoom();
+            scrollResetPending = false;
         }
     }
 
