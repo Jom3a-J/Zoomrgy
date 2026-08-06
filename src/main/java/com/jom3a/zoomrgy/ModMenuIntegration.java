@@ -136,62 +136,12 @@ public class ModMenuIntegration implements ModMenuApi {
             // Category 2: Easing & Transitions
             ConfigCategory transitions = builder.getOrCreateCategory(Component.literal("Easing & Transitions"));
 
-            // Built first so the preview can read their live values, then added in display order.
-            var speedInEntry = entry
-                .startIntSlider(Component.literal("Zoom In Speed"), (int) (cfg.zoomSpeed * 100), 5, 100)
-                .setDefaultValue((int) (def.zoomSpeed * 100))
-                .setTextGetter(val -> Component.literal(val + "%"))
-                .setTooltip(Component.literal("How fast the view travels inwards. 5% = ultra-slow, 100% = instant snap."))
-                .setSaveConsumer(val -> cfg.zoomSpeed = val / 100.0)
-                .build();
-
-            var curveInEntry = entry
-                .startSelector(
-                    Component.literal("Zoom In Curve"),
-                    ZoomTransition.getSelectableTypes(),
-                    // Must be one of the selectable values - a legacy type from an older
-                    // config is not in that array and would leave the selector on index -1.
-                    ZoomTransition.normalize(cfg.transitionType)
-                )
-                .setDefaultValue(def.transitionType)
-                .setNameProvider(val -> Component.literal(val.getDisplayName()))
-                .setTooltip(Component.literal("Easing curve used while zooming in."))
-                .setSaveConsumer(val -> cfg.transitionType = val)
-                .build();
-
-            var speedOutEntry = entry
-                .startIntSlider(Component.literal("Zoom Out Speed"), (int) (cfg.zoomSpeedOut * 100), 5, 100)
-                .setDefaultValue((int) (def.zoomSpeedOut * 100))
-                .setTextGetter(val -> Component.literal(val + "%"))
-                .setTooltip(Component.literal("How fast the view travels back out. Set this slower than the inward speed for a lingering release."))
-                .setSaveConsumer(val -> cfg.zoomSpeedOut = val / 100.0)
-                .build();
-
-            var curveOutEntry = entry
-                .startSelector(
-                    Component.literal("Zoom Out Curve"),
-                    ZoomTransition.getSelectableTypes(),
-                    ZoomTransition.normalize(cfg.transitionTypeOut)
-                )
-                .setDefaultValue(def.transitionTypeOut)
-                .setNameProvider(val -> Component.literal(val.getDisplayName()))
-                .setTooltip(Component.literal("Easing curve used while zooming back out. It does not have to match the way in."))
-                .setSaveConsumer(val -> cfg.transitionTypeOut = val)
-                .build();
-
-            // Reads the entries rather than the config, so the curves animate as you edit them
-            // instead of only after saving.
-            transitions.addEntry(new EasingPreviewEntry(
-                Component.literal("Preview"),
-                curveInEntry::getValue,
-                curveOutEntry::getValue,
-                () -> speedInEntry.getValue() / 100.0,
-                () -> speedOutEntry.getValue() / 100.0));
-
-            transitions.addEntry(speedInEntry);
-            transitions.addEntry(curveInEntry);
-            transitions.addEntry(speedOutEntry);
-            transitions.addEntry(curveOutEntry);
+            // The four easing controls live on their own two-column screen, where the preview
+            // can stay pinned beside them instead of scrolling away.
+            transitions.addEntry(new OpenScreenEntry(
+                Component.literal("Zoom In / Out Easing"),
+                Component.literal("Open editor"),
+                current -> new TransitionScreen(current)));
 
             transitions.addEntry(entry
                 .startIntSlider(Component.literal("Dynamic Movement Damping"), (int) (cfg.movementFovDamping * 100), 0, 100)
