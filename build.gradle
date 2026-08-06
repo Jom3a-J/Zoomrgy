@@ -52,8 +52,11 @@ dependencies {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
-	// Mod Menu
+	// Mod Menu. Compile-only for the published mod, since it is an optional integration, plus
+	// localRuntime so the config screen is actually reachable in the dev client. localRuntime is
+	// a Loom configuration that never leaks into the published dependencies.
 	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+	localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {

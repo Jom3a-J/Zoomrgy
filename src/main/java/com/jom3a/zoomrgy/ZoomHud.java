@@ -15,10 +15,15 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
- * The zoom overlay: magnification and heading on one line, rangefinder telemetry on the next.
+ * The zoom overlay: magnification and heading, then rangefinder telemetry beneath it.
+ *
+ * <p>Content is built as a list of short lines rather than a couple of long ones, because the
+ * panel sizes to its widest line - piling detail onto one line makes the whole box grow sideways.
  *
  * <p>Every glyph used here has to live inside the Basic Multilingual Plane. Minecraft only loads
  * the plane 0 unifont files, so a supplementary-plane character renders as a missing-glyph box.
@@ -28,17 +33,34 @@ public final class ZoomHud {
 
     private static final String[] COMPASS = {"S", "SW", "W", "NW", "N", "NE", "E", "SE"};
 
-    private static final String ICON_BLOCK = "⛶";  // ⛶
-    private static final String ICON_RANGE = "⌖";  // ⌖
-    private static final String ICON_ENTITY = "☺"; // ☺
-    private static final String ICON_MONSTER = "☠"; // ☠
-    private static final String ICON_ANIMAL = "❤";  // ❤
+    private static final String ICON_BLOCK = "⛶";
+    private static final String ICON_RANGE = "⌖";
+    private static final String ICON_COORDS = "⌗";
+    private static final String ICON_HEALTH = "✚";
+    private static final String ICON_ENTITY = "☺";
+    private static final String ICON_MONSTER = "☠";
+    private static final String ICON_ANIMAL = "❤";
 
     private static final int PADDING_X = 6;
     private static final int PADDING_Y = 4;
     private static final int LINE_GAP = 4;
 
     private ZoomHud() {
+    }
+
+    /**
+     * Horizontal origin for an anchor. The offset is an inset measured inwards from the anchored
+     * edge, so one default works for every anchor instead of only the bottom ones.
+     */
+    public static float originX(HudAnchor anchor, int guiWidth, int offsetX) {
+        float direction = anchor.isRightAligned() ? -1.0f : 1.0f;
+        return guiWidth * anchor.horizontal() + offsetX * direction;
+    }
+
+    /** Vertical origin for an anchor, measured inwards from the anchored edge. */
+    public static float originY(HudAnchor anchor, int guiHeight, int offsetY) {
+        float direction = anchor.vertical() >= 1.0f ? -1.0f : 1.0f;
+        return guiHeight * anchor.vertical() + offsetY * direction;
     }
 
     /**
@@ -49,26 +71,31 @@ public final class ZoomHud {
         ZoomConfig.Config cfg = ZoomConfig.get();
 
         double magnification = ZoomState.getMagnification(renderZoom);
-        String label = String.format(Locale.US, "%.1fx  |  %s", magnification, heading(mc));
-        String telemetry = cfg.showTelemetryHud ? telemetry(mc, magnification, partialTicks) : "";
+
+        List<String> lines = new ArrayList<>(3);
+        lines.add(String.format(Locale.US, "%.1fx  |  %s", magnification, heading(mc)));
+        if (cfg.showTelemetryHud) {
+            lines.addAll(telemetryLines(mc, magnification, partialTicks));
+        }
 
         Font font = mc.font;
         int lineHeight = font.lineHeight;
-        int labelWidth = font.width(label);
-        int telemetryWidth = telemetry.isEmpty() ? 0 : font.width(telemetry);
 
-        int panelWidth = Math.max(labelWidth, telemetryWidth);
-        int panelHeight = telemetry.isEmpty() ? lineHeight : lineHeight * 2 + LINE_GAP;
+        int panelWidth = 0;
+        for (String line : lines) {
+            panelWidth = Math.max(panelWidth, font.width(line));
+        }
+        int panelHeight = lines.size() * lineHeight + (lines.size() - 1) * LINE_GAP;
 
         HudAnchor anchor = cfg.hudAnchor == null ? HudAnchor.BOTTOM_CENTER : cfg.hudAnchor;
         float scale = (float) cfg.hudScale;
 
-        // Everything below is laid out in unscaled space around the origin, then the matrix moves
-        // it to the anchor. That keeps the layout arithmetic independent of position and scale.
-        float originX = extractor.guiWidth() * anchor.horizontal() + cfg.hudOffsetX;
-        float originY = extractor.guiHeight() * anchor.vertical() + cfg.hudOffsetY;
+        // Laid out in unscaled local space around the origin, then moved into place by the matrix,
+        // so the layout arithmetic stays independent of position and scale.
+        float originX = originX(anchor, extractor.guiWidth(), cfg.hudOffsetX);
+        float originY = originY(anchor, extractor.guiHeight(), cfg.hudOffsetY);
 
-        // Slide the panel towards its anchor edge as the zoom comes in.
+        // Slide in towards the anchored edge as the zoom arrives.
         float slide = (float) ((1.0 - renderZoom) * 10.0) * (anchor.vertical() >= 0.5f ? 1.0f : -1.0f);
 
         int localX;
@@ -80,11 +107,6 @@ public final class ZoomHud {
             localX = 0;
         }
         int localY = (int) (-panelHeight * anchor.vertical());
-
-        int labelX = localX + alignOffset(anchor, panelWidth, labelWidth);
-        int telemetryX = localX + alignOffset(anchor, panelWidth, telemetryWidth);
-        int labelY = localY;
-        int telemetryY = labelY + lineHeight + LINE_GAP;
 
         int alpha = (int) (renderZoom * 255.0) & 0xFF;
         int textColor = (cfg.zoomHudColor & 0xFFFFFF) | (alpha << 24);
@@ -104,15 +126,17 @@ public final class ZoomHud {
                 renderZoom);
         }
 
-        extractor.text(font, label, labelX, labelY, textColor, true);
-        if (!telemetry.isEmpty()) {
-            extractor.text(font, telemetry, telemetryX, telemetryY, textColor, true);
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            int x = localX + alignOffset(anchor, panelWidth, font.width(line));
+            int y = localY + i * (lineHeight + LINE_GAP);
+            extractor.text(font, line, x, y, textColor, true);
         }
 
         extractor.pose().popMatrix();
     }
 
-    /** Keeps the two lines aligned with each other the same way the panel meets its anchor. */
+    /** Keeps the lines aligned with each other the same way the panel meets its anchor. */
     private static int alignOffset(HudAnchor anchor, int panelWidth, int lineWidth) {
         if (anchor.isHorizontallyCentered()) return (panelWidth - lineWidth) / 2;
         if (anchor.isRightAligned()) return panelWidth - lineWidth;
@@ -139,39 +163,43 @@ public final class ZoomHud {
         return String.format(Locale.US, "%.0f° %s", degrees, COMPASS[sector]);
     }
 
-    private static String telemetry(Minecraft mc, double magnification, float partialTicks) {
+    /** Name and range on one line, the finer detail on a second, so neither gets long. */
+    private static List<String> telemetryLines(Minecraft mc, double magnification, float partialTicks) {
+        List<String> lines = new ArrayList<>(2);
+
         HitResult hit = ZoomTargeting.raycast(mc, ZoomTargeting.rangeFor(magnification), partialTicks);
-        if (hit == null || hit.getType() == HitResult.Type.MISS) return "";
+        if (hit == null || hit.getType() == HitResult.Type.MISS) return lines;
 
         Vec3 eye = mc.player.getEyePosition(partialTicks);
 
         if (hit instanceof BlockHitResult blockHit) {
-            if (mc.level == null) return "";
+            if (mc.level == null) return lines;
             BlockPos pos = blockHit.getBlockPos();
             String name = mc.level.getBlockState(pos).getBlock().getName().getString();
-            if (name.isEmpty()) return "";
+            if (name.isEmpty()) return lines;
 
-            return String.format(Locale.US, "%s %s  |  %s %.1fm  |  %d %d %d",
-                ICON_BLOCK, name, ICON_RANGE, eye.distanceTo(blockHit.getLocation()),
-                pos.getX(), pos.getY(), pos.getZ());
+            lines.add(String.format(Locale.US, "%s %s  |  %s %.1fm",
+                ICON_BLOCK, name, ICON_RANGE, eye.distanceTo(blockHit.getLocation())));
+            lines.add(String.format(Locale.US, "%s %d %d %d",
+                ICON_COORDS, pos.getX(), pos.getY(), pos.getZ()));
+            return lines;
         }
 
         if (hit instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
             String name = entity.getName().getString();
-            if (name.isEmpty()) return "";
+            if (name.isEmpty()) return lines;
 
-            String base = String.format(Locale.US, "%s %s  |  %s %.1fm",
-                iconFor(entity), name, ICON_RANGE, eye.distanceTo(entityHit.getLocation()));
+            lines.add(String.format(Locale.US, "%s %s  |  %s %.1fm",
+                iconFor(entity), name, ICON_RANGE, eye.distanceTo(entityHit.getLocation())));
 
             if (entity instanceof LivingEntity living) {
-                return base + String.format(Locale.US, "  |  %s %.0f/%.0f",
-                    ICON_ANIMAL, living.getHealth(), living.getMaxHealth());
+                lines.add(String.format(Locale.US, "%s %.0f/%.0f",
+                    ICON_HEALTH, living.getHealth(), living.getMaxHealth()));
             }
-            return base;
         }
 
-        return "";
+        return lines;
     }
 
     private static String iconFor(Entity entity) {

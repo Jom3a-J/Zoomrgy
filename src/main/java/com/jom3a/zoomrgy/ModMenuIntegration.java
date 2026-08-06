@@ -230,18 +230,18 @@ public class ModMenuIntegration implements ModMenuApi {
                 .build());
 
             hudGroup.add(entry
-                .startIntSlider(Component.literal("HUD Offset X"), cfg.hudOffsetX, -200, 200)
+                .startIntSlider(Component.literal("HUD Inset X"), cfg.hudOffsetX, -200, 200)
                 .setDefaultValue(def.hudOffsetX)
                 .setTextGetter(val -> Component.literal(val + " px"))
-                .setTooltip(Component.literal("Nudges the overlay horizontally away from its anchor."))
+                .setTooltip(Component.literal("Horizontal distance inwards from the anchored edge. Positive always moves towards the middle of the screen, whichever side the HUD is anchored to."))
                 .setSaveConsumer(val -> cfg.hudOffsetX = val)
                 .build());
 
             hudGroup.add(entry
-                .startIntSlider(Component.literal("HUD Offset Y"), cfg.hudOffsetY, -200, 200)
+                .startIntSlider(Component.literal("HUD Inset Y"), cfg.hudOffsetY, -200, 200)
                 .setDefaultValue(def.hudOffsetY)
                 .setTextGetter(val -> Component.literal(val + " px"))
-                .setTooltip(Component.literal("Nudges the overlay vertically away from its anchor."))
+                .setTooltip(Component.literal("Vertical distance inwards from the anchored edge. Positive moves down from a top anchor and up from a bottom one."))
                 .setSaveConsumer(val -> cfg.hudOffsetY = val)
                 .build());
 

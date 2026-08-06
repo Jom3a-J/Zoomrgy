@@ -78,6 +78,12 @@ public class ZoomConfig {
                 if (instance.spyglassZoomFov != 7.0 && instance.spyglassZoomMultiplier == 10.0) {
                     instance.spyglassZoomMultiplier = Math.round((70.0 / instance.spyglassZoomFov) * 10.0) / 10.0;
                 }
+                // hudOffsetY used to be a raw screen delta, so its default was -60. It is now an
+                // inset measured inwards from the anchored edge; leaving the old value alone would
+                // push a bottom-anchored HUD straight off the bottom of the screen.
+                if (json != null && json.has("hudOffsetY") && instance.hudOffsetY == -60) {
+                    instance.hudOffsetY = 60;
+                }
             } catch (Exception e) {
                 // Malformed JSON throws JsonSyntaxException (unchecked) - letting that escape
                 // onInitializeClient would hard-crash the game on startup. Fall back to defaults
@@ -167,8 +173,9 @@ public class ZoomConfig {
         public boolean zoomHudBackground     = true;
         public int     zoomHudColor          = 0xFFFFFF;
         public HudAnchor hudAnchor           = HudAnchor.BOTTOM_CENTER;
+        /** Insets measured inwards from the anchored edge, so one default suits every anchor. */
         public int     hudOffsetX            = 0;
-        public int     hudOffsetY            = -60;
+        public int     hudOffsetY            = 60;
         public double  hudScale              = 1.0;
         public boolean reduceFog             = true;
         public double  zoomVignetteOpacity   = 0.4;

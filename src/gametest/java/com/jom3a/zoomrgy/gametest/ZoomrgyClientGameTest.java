@@ -3,6 +3,7 @@ package com.jom3a.zoomrgy.gametest;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.jom3a.zoomrgy.HudAnchor;
 import com.jom3a.zoomrgy.ZoomConfig;
+import com.jom3a.zoomrgy.ZoomHud;
 import com.jom3a.zoomrgy.ZoomKeyBindings;
 import com.jom3a.zoomrgy.ZoomState;
 import com.jom3a.zoomrgy.ZoomTransition;
@@ -27,6 +28,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         testTransitionNormalisation();
         testConfigSanitisation();
         testKeybindCategoryIsTranslated(context);
+        testEveryAnchorLandsOnScreen(context);
 
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
             singleplayer.getClientLevel().waitForChunksRender();
@@ -99,6 +101,38 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
             cfg.zoomSpeed = zoomSpeed;
             ZoomConfig.sanitize();
         }
+    }
+
+    /**
+     * Every anchor must place the HUD somewhere on screen. The offsets used to be raw screen
+     * deltas with a default of -60, which put all three top anchors at y = -60 - rendering
+     * perfectly happily, entirely out of view. The crash smoke test below cannot see that, so
+     * this checks the geometry directly.
+     */
+    private void testEveryAnchorLandsOnScreen(ClientGameTestContext context) {
+        ZoomConfig.Config def = ZoomConfig.defaults();
+        int width = 854;
+        int height = 480;
+
+        for (HudAnchor anchor : HudAnchor.values()) {
+            float x = ZoomHud.originX(anchor, width, def.hudOffsetX);
+            float y = ZoomHud.originY(anchor, height, def.hudOffsetY);
+
+            assertTrue(x >= 0.0f && x <= width,
+                anchor + " puts the HUD origin at x=" + x + ", outside 0.." + width);
+            assertTrue(y >= 0.0f && y <= height,
+                anchor + " puts the HUD origin at y=" + y + ", outside 0.." + height);
+        }
+
+        // The inset must move inwards from whichever edge is anchored, not in one fixed direction.
+        assertTrue(ZoomHud.originY(HudAnchor.TOP_CENTER, height, 60) > 0.0f,
+            "a top anchor should be pushed down from the top edge");
+        assertTrue(ZoomHud.originY(HudAnchor.BOTTOM_CENTER, height, 60) < height,
+            "a bottom anchor should be pushed up from the bottom edge");
+        assertTrue(ZoomHud.originX(HudAnchor.TOP_RIGHT, width, 60) < width,
+            "a right anchor should be pushed left from the right edge");
+        assertTrue(ZoomHud.originX(HudAnchor.TOP_LEFT, width, 60) > 0.0f,
+            "a left anchor should be pushed right from the left edge");
     }
 
     /**
