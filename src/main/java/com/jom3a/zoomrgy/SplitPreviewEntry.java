@@ -100,7 +100,7 @@ public class SplitPreviewEntry extends TooltipListEntry<Object> {
         int dividerX = SplitLayout.dividerX();
         int dividerTop = Math.max(0, listTop - TOP_INSET);
         int dividerBottom = Math.max(dividerTop + 1, screenHeight - 34);
-        extractor.fill(dividerX, dividerTop, dividerX + 2, dividerBottom, 0xFFFFFFFF);
+        extractor.fill(dividerX, dividerTop, dividerX + 1, dividerBottom, 0x50FFFFFF);
 
         int previewLeft = SplitLayout.previewLeft();
         int previewWidth = SplitLayout.previewWidth();

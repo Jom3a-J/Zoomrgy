@@ -67,9 +67,14 @@ public final class EasingPreview {
 
         drawFrame(extractor, left, top, width, height);
 
+        // The caption sits over the picture, so it needs its own backing to stay legible against
+        // a bright sky as well as a dark cave.
         String caption = String.format(Locale.US, "%s  -  %s",
             phaseOut ? "zooming out" : "zooming in", curve.getDisplayName());
-        extractor.text(font, caption, left + 4, top + height - font.lineHeight - 4, 0xFFFFFFFF, true);
+        int captionHeight = font.lineHeight + 5;
+        int captionTop = top + height - captionHeight - 1;
+        extractor.fill(left + 1, captionTop, left + width - 1, top + height - 1, 0x90000000);
+        extractor.text(font, caption, left + 5, captionTop + 3, 0xFFE8E8E8, false);
     }
 
     /**
@@ -131,9 +136,9 @@ public final class EasingPreview {
     private static void drawFrame(GuiGraphicsExtractor extractor, int left, int top, int width, int height) {
         int right = left + width;
         int bottom = top + height;
-        extractor.fill(left, top, right, top + 1, 0x80FFFFFF);
-        extractor.fill(left, bottom - 1, right, bottom, 0x80FFFFFF);
-        extractor.fill(left, top, left + 1, bottom, 0x80FFFFFF);
-        extractor.fill(right - 1, top, right, bottom, 0x80FFFFFF);
+        extractor.fill(left, top, right, top + 1, 0x50FFFFFF);
+        extractor.fill(left, bottom - 1, right, bottom, 0x50FFFFFF);
+        extractor.fill(left, top, left + 1, bottom, 0x50FFFFFF);
+        extractor.fill(right - 1, top, right, bottom, 0x50FFFFFF);
     }
 }

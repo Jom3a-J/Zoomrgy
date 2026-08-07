@@ -38,6 +38,18 @@ final class SplitLayout {
         return Math.max(60, Math.min(entryWidth, available));
     }
 
+    /**
+     * Widget bounds for a settings row: the control sits against the right edge of the settings
+     * column with the field name to its left, the way the rest of the config screen reads.
+     */
+    static int controlWidth(int x, int entryWidth) {
+        return Math.max(60, Math.min(150, columnWidth(x, entryWidth) / 2));
+    }
+
+    static int controlX(int x, int entryWidth) {
+        return x + columnWidth(x, entryWidth) - controlWidth(x, entryWidth);
+    }
+
     static int previewLeft() {
         return dividerX() + GUTTER;
     }

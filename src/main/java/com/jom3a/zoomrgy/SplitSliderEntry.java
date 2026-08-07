@@ -27,8 +27,9 @@ public class SplitSliderEntry extends TooltipListEntry<Integer> {
     private final Consumer<Integer> onSave;
 
     public SplitSliderEntry(Component fieldName, int value, int min, int max, int defaultValue,
-                            IntFunction<String> label, Consumer<Integer> onSave) {
-        super(fieldName, null);
+                            IntFunction<String> label, Consumer<Integer> onSave, String tooltip) {
+        super(fieldName, tooltip == null ? null
+            : () -> java.util.Optional.of(new Component[]{Component.literal(tooltip)}));
         this.defaultValue = defaultValue;
         this.onSave = onSave;
         this.slider = new Slider(value, min, max, label);
@@ -77,10 +78,13 @@ public class SplitSliderEntry extends TooltipListEntry<Integer> {
     public void extractRenderState(GuiGraphicsExtractor extractor, int index, int y, int x,
                                    int entryWidth, int entryHeight, int mouseX, int mouseY,
                                    boolean isHovered, float delta) {
-        int width = SplitLayout.columnWidth(x, entryWidth);
-        slider.setX(x);
+        net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+        extractor.text(font, this.getFieldName(), x, y + (ROW_HEIGHT - font.lineHeight) / 2,
+            this.getPreferredTextColor(), false);
+
+        slider.setX(SplitLayout.controlX(x, entryWidth));
         slider.setY(y + (ROW_HEIGHT - CONTROL_HEIGHT) / 2);
-        slider.setWidth(width);
+        slider.setWidth(SplitLayout.controlWidth(x, entryWidth));
         slider.extractRenderState(extractor, mouseX, mouseY, delta);
     }
 

@@ -140,26 +140,29 @@ public class ModMenuIntegration implements ModMenuApi {
             // themselves so the panel has a column to sit in; see SplitLayout.
             var speedIn = new SplitSliderEntry(Component.literal("Zoom In Speed"),
                 (int) Math.round(cfg.zoomSpeed * 100), 5, 100, (int) Math.round(def.zoomSpeed * 100),
-                v -> "Zoom In Speed: " + v + "%", v -> cfg.zoomSpeed = v / 100.0);
+                v -> v + "%", v -> cfg.zoomSpeed = v / 100.0,
+                "How fast the view travels inwards. 5% = ultra-slow, 100% = instant snap.");
 
             var curveIn = new SplitCycleEntry<>(Component.literal("Zoom In Curve"),
                 ZoomTransition.getSelectableTypes(), ZoomTransition.normalize(cfg.transitionType),
-                def.transitionType, t -> Component.literal("Zoom In Curve: " + t.getDisplayName()),
-                v -> cfg.transitionType = v);
+                def.transitionType, t -> Component.literal(t.getDisplayName()),
+                v -> cfg.transitionType = v, "Easing curve used while zooming in.");
 
             var speedOut = new SplitSliderEntry(Component.literal("Zoom Out Speed"),
                 (int) Math.round(cfg.zoomSpeedOut * 100), 5, 100, (int) Math.round(def.zoomSpeedOut * 100),
-                v -> "Zoom Out Speed: " + v + "%", v -> cfg.zoomSpeedOut = v / 100.0);
+                v -> v + "%", v -> cfg.zoomSpeedOut = v / 100.0,
+                "How fast the view travels back out. Set this slower than the inward speed for a lingering release.");
 
             var curveOut = new SplitCycleEntry<>(Component.literal("Zoom Out Curve"),
                 ZoomTransition.getSelectableTypes(), ZoomTransition.normalize(cfg.transitionTypeOut),
-                def.transitionTypeOut, t -> Component.literal("Zoom Out Curve: " + t.getDisplayName()),
-                v -> cfg.transitionTypeOut = v);
+                def.transitionTypeOut, t -> Component.literal(t.getDisplayName()),
+                v -> cfg.transitionTypeOut = v, "Easing curve used while zooming back out. It does not have to match the way in.");
 
             var damping = new SplitSliderEntry(Component.literal("Dynamic Movement Damping"),
                 (int) Math.round(cfg.movementFovDamping * 100), 0, 100,
                 (int) Math.round(def.movementFovDamping * 100),
-                v -> "Movement Damping: " + v + "%", v -> cfg.movementFovDamping = v / 100.0);
+                v -> v + "%", v -> cfg.movementFovDamping = v / 100.0,
+                "Scales down movement FOV adjustments (like sprinting or flying) while zooming to avoid disorienting stutters.");
 
             // Zero height; draws the divider and panel beside the rows above.
             transitions.addEntry(new SplitPreviewEntry(
