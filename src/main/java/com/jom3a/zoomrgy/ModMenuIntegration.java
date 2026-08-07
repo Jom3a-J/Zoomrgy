@@ -136,20 +136,41 @@ public class ModMenuIntegration implements ModMenuApi {
             // Category 2: Easing & Transitions
             ConfigCategory transitions = builder.getOrCreateCategory(Component.literal("Easing & Transitions"));
 
-            // The four easing controls live on their own two-column screen, where the preview
-            // can stay pinned beside them instead of scrolling away.
-            transitions.addEntry(new OpenScreenEntry(
-                Component.literal("Zoom In / Out Easing"),
-                Component.literal("Open editor"),
-                current -> new TransitionScreen(current)));
+            // Settings down the left, preview pinned to the right of a divider. The rows narrow
+            // themselves so the panel has a column to sit in; see SplitLayout.
+            var speedIn = new SplitSliderEntry(Component.literal("Zoom In Speed"),
+                (int) Math.round(cfg.zoomSpeed * 100), 5, 100, (int) Math.round(def.zoomSpeed * 100),
+                v -> "Zoom In Speed: " + v + "%", v -> cfg.zoomSpeed = v / 100.0);
 
-            transitions.addEntry(entry
-                .startIntSlider(Component.literal("Dynamic Movement Damping"), (int) (cfg.movementFovDamping * 100), 0, 100)
-                .setDefaultValue(80)
-                .setTextGetter(val -> Component.literal(val + "%"))
-                .setTooltip(Component.literal("Scales down movement FOV adjustments (like sprinting or flying) while zooming to avoid disorienting stutters. 100% = complete motion stabilization."))
-                .setSaveConsumer(val -> cfg.movementFovDamping = val / 100.0)
-                .build());
+            var curveIn = new SplitCycleEntry<>(Component.literal("Zoom In Curve"),
+                ZoomTransition.getSelectableTypes(), ZoomTransition.normalize(cfg.transitionType),
+                def.transitionType, t -> Component.literal("Zoom In Curve: " + t.getDisplayName()),
+                v -> cfg.transitionType = v);
+
+            var speedOut = new SplitSliderEntry(Component.literal("Zoom Out Speed"),
+                (int) Math.round(cfg.zoomSpeedOut * 100), 5, 100, (int) Math.round(def.zoomSpeedOut * 100),
+                v -> "Zoom Out Speed: " + v + "%", v -> cfg.zoomSpeedOut = v / 100.0);
+
+            var curveOut = new SplitCycleEntry<>(Component.literal("Zoom Out Curve"),
+                ZoomTransition.getSelectableTypes(), ZoomTransition.normalize(cfg.transitionTypeOut),
+                def.transitionTypeOut, t -> Component.literal("Zoom Out Curve: " + t.getDisplayName()),
+                v -> cfg.transitionTypeOut = v);
+
+            var damping = new SplitSliderEntry(Component.literal("Dynamic Movement Damping"),
+                (int) Math.round(cfg.movementFovDamping * 100), 0, 100,
+                (int) Math.round(def.movementFovDamping * 100),
+                v -> "Movement Damping: " + v + "%", v -> cfg.movementFovDamping = v / 100.0);
+
+            // Zero height; draws the divider and panel beside the rows above.
+            transitions.addEntry(new SplitPreviewEntry(
+                curveIn::getValue, curveOut::getValue,
+                () -> speedIn.getIntValue() / 100.0, () -> speedOut.getIntValue() / 100.0));
+
+            transitions.addEntry(speedIn);
+            transitions.addEntry(curveIn);
+            transitions.addEntry(speedOut);
+            transitions.addEntry(curveOut);
+            transitions.addEntry(damping);
 
 
             // Category 3: Mouse & Sensitivity
