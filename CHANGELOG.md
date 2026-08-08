@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- The download is now split per loader: `zoomrgy-fabric-<version>.jar` and
+  `zoomrgy-neoforge-<version>.jar`. There is no longer a single `zoomrgy-<version>.jar`.
 - The mod's package moved from `com.yourname.zoomrgy` to `com.jom3a.zoomrgy`, and the Maven
   group is now `com.jom3a`. Anything depending on the old package will need updating.
 - Nine deprecated config keys are no longer written (`zoomedFov`, `zoomInSpeed`, `zoomOutSpeed`,
@@ -53,12 +55,23 @@
 
 ### Added
 
+- **NeoForge support.** The mod now runs on NeoForge as well as Fabric, from a shared codebase:
+  all the logic and five of the six mixins are common to both.
 - The zoom HUD can be anchored to any of nine screen positions, with insets.
 - The Easing & Transitions page is split: settings on the left, a live preview on the right that
   zooms a picture from your own game using the configured curves and speeds. Press F2 on a view
   you like and it becomes the preview.
 - Telemetry shows block coordinates and, for living entities, current and maximum health.
-- A client gametest suite covering the zoom and HUD behaviour, run with `./gradlew runClientGameTest`.
+- A client gametest suite covering the zoom and HUD behaviour, run with
+  `./gradlew :fabric:runClientGameTest`.
+
+### Known limitations
+
+- On NeoForge, "Hide Hotbar during Zoom" hides the item hotbar but not the surrounding HUD
+  decorations. NeoForge replaces that part of vanilla's HUD with its own overlay system.
+- The gametests run on Fabric only; the client gametest API has no NeoForge equivalent.
+- Quilt is not supported. Quilted Fabric API has not been updated past Minecraft 1.21, so the
+  Fabric API this mod depends on cannot be satisfied on Quilt for this Minecraft version.
 
 ## 1.1.0
 
