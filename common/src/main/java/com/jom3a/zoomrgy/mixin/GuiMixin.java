@@ -18,6 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Hud.class)
 public abstract class GuiMixin {
 
+    // Hiding the surrounding HUD decorations lives in the Fabric subproject: NeoForge patches
+    // extractHotbarAndDecorations out of Hud entirely, replacing it with its own overlay system,
+    // so an injection into it here would fail to apply on that loader.
+
+
     private static final Identifier VIGNETTE_TEXTURE =
         Identifier.fromNamespaceAndPath("minecraft", "textures/misc/vignette.png");
     private static final Identifier SPYGLASS_SCOPE_TEXTURE =
@@ -25,13 +30,6 @@ public abstract class GuiMixin {
 
     @Shadow
     protected abstract void extractTextureOverlay(GuiGraphicsExtractor extractor, Identifier texture, float alpha);
-
-    @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"), cancellable = true, require = 1)
-    private void onExtractHotbarAndDecorations(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (ZoomConfig.get().hideHotbar && ZoomState.isZoomActive()) {
-            ci.cancel();
-        }
-    }
 
     @Inject(method = "extractItemHotbar", at = @At("HEAD"), cancellable = true, require = 1)
     private void onExtractItemHotbar(GuiGraphicsExtractor extractor, DeltaTracker deltaTracker, CallbackInfo ci) {

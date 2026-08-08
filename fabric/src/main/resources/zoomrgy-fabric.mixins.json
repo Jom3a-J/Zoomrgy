@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.jom3a.zoomrgy.fabric.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "FabricHudMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

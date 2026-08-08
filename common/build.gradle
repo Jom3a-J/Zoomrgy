@@ -1,3 +1,0 @@
-// Holds the shared sources and resources. Nothing is built here: the loader subprojects add
-// these directories to their own source sets so the code compiles against each loader's
-// Minecraft rather than against a third copy.

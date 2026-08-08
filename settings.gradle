@@ -10,6 +10,7 @@ pluginManagement {
 // Should match your modid
 rootProject.name = 'zoomrgy'
 
-include 'common'
+// common/ is a plain source directory, not a Gradle project: each loader subproject compiles
+// it against its own Minecraft, so there is nothing to build here on its own.
 include 'fabric'
 include 'neoforge'

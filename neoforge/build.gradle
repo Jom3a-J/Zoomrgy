@@ -1,0 +1,48 @@
+plugins {
+	id 'net.neoforged.moddev' version "${moddev_version}"
+}
+
+base {
+	archivesName = "${project.archives_base_name}-neoforge"
+}
+
+repositories {
+	maven { url "https://maven.shedaniel.me/" } // Cloth Config
+}
+
+// Same shared sources as the Fabric build, compiled against NeoForge's Minecraft.
+sourceSets.main.java.srcDir rootProject.file('common/src/main/java')
+sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
+
+neoForge {
+	version = project.neoforge_version
+
+	runs {
+		client {
+			client()
+		}
+	}
+
+	mods {
+		"zoomrgy" {
+			sourceSet sourceSets.main
+		}
+	}
+}
+
+dependencies {
+	implementation "me.shedaniel.cloth:cloth-config-neoforge:${project.cloth_config_version}"
+}
+
+processResources {
+	inputs.property "version", project.version
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand "version": project.version
+	}
+}
+
+jar {
+	from(rootProject.file("LICENSE")) {
+		rename { "${it}_${project.archives_base_name}" }
+	}
+}
