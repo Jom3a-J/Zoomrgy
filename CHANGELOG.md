@@ -38,7 +38,8 @@
 
 ### Not supported
 
-- **Quilt.** Quilted Fabric API has not been updated past Minecraft 1.21.
+- **Quilt.** Not tested and not supported. Quilted Fabric API has not been updated past
+  Minecraft 1.21, so the usual way of getting Fabric API on Quilt is unavailable.
 - On NeoForge, "Hide Hotbar during Zoom" hides the hotbar but not the health and hunger bars
   around it.
 
