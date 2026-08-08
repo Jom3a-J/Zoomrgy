@@ -2,76 +2,45 @@
 
 ## 1.2.0
 
-### Breaking
+### New
 
-- The download is now split per loader: `zoomrgy-fabric-<version>.jar` and
-  `zoomrgy-neoforge-<version>.jar`. There is no longer a single `zoomrgy-<version>.jar`.
-- The mod's package moved from `com.yourname.zoomrgy` to `com.jom3a.zoomrgy`, and the Maven
-  group is now `com.jom3a`. Anything depending on the old package will need updating.
-- Nine deprecated config keys are no longer written (`zoomedFov`, `zoomInSpeed`, `zoomOutSpeed`,
-  `zoomInTransition`, `zoomOutTransition`, `cinematicCamera`, `cinematicCameraMultiplier`,
-  `zoomedFovPreset2`, `spyglassZoomFov`). Existing files still migrate; the dead keys simply
-  disappear on the next save.
-- `hudOffsetX` / `hudOffsetY` changed meaning from raw screen deltas to insets measured inwards
-  from the anchored edge. Configs carrying the old `-60` are migrated automatically.
-
-### Fixed
-
-- A malformed `zoomrgy.json` crashed the game on startup. Bad files now fall back to defaults and
-  are left on disk to be repaired.
-- An unrecognised easing name deserialised to `null` and threw on every frame; a legacy easing
-  name could also leave the config screen's selector on an invalid entry.
-- The `Back` and `Elastic` curves overshoot past their target, which at high magnification drove
-  the camera FOV negative and broke the projection. Measured at -0.33 before the fix.
-- Zooming, then releasing, snapped the view out to the preset's base level before easing away.
-  The zoom parameters are now held through the fade-out.
-- The scroll wheel was swallowed while a screen was open, so a locked zoom broke scrolling in the
-  inventory, creative tabs and chat.
-- Zoom state survived leaving a world, so the next world you joined rendered fully zoomed in and
-  then animated out.
-- F1 hid the zoom HUD text but left the vignette and scope overlay on screen.
-- Vanilla's spyglass scope was removed even with the mod's spyglass zoom turned off.
-- The keybind category never translated, showing a raw translation key in Controls.
-- The telemetry player icon used a character outside the Basic Multilingual Plane, which Minecraft
-  cannot render, so it appeared as a missing-glyph box.
-- Mouse sensitivity followed a reconstruction of the transition rather than the FOV actually being
-  rendered, and drifted out of step mid-zoom.
-- Fog reduction ignored the preset multiplier entirely, so preset 2 pushed fog no further than the
-  primary zoom.
-- The scroll level could stay above a lowered maximum, and a double-tap was dropped if a key was
-  held through the damage cutoff.
+- Runs on **NeoForge** as well as Fabric.
+- Zoom in and zoom out now have **separate speeds and easing curves**.
+- **Live preview** in the settings, showing a picture from your own game zooming with the curve
+  you picked. Press F2 on a view you like and it becomes the preview.
+- The zoom HUD can be **moved** to any of nine screen positions.
+- Rangefinder now shows block coordinates and mob health.
 
 ### Changed
 
-- Scroll steps are now geometric rather than linear. Previously the first notch halved the FOV and
-  the tenth barely registered; every notch is now the same proportional step, with a configurable
-  ratio.
-- Each zoom source keeps its own scroll level, so working preset 2 no longer discards where the
-  primary zoom was left.
-- Zoom in and zoom out have separate speeds and separate easing curves.
-- Defaults are `SMOOTHSTEP` and a 40% vignette, matching what the documentation always described.
-- The targeting raycast stops at the first solid block instead of always spanning the full ray,
-  and its range follows current magnification rather than a fixed 150 blocks.
+- Scroll steps are even. Every notch is the same amount of zoom, instead of the first notch doing
+  far more than the last.
+- Each zoom key remembers its own scroll level.
+- Mouse sensitivity and fog now follow how far you are actually zoomed in.
 
-### Added
+### Fixed
 
-- **NeoForge support.** The mod now runs on NeoForge as well as Fabric, from a shared codebase:
-  all the logic and five of the six mixins are common to both.
-- The zoom HUD can be anchored to any of nine screen positions, with insets.
-- The Easing & Transitions page is split: settings on the left, a live preview on the right that
-  zooms a picture from your own game using the configured curves and speeds. Press F2 on a view
-  you like and it becomes the preview.
-- Telemetry shows block coordinates and, for living entities, current and maximum health.
-- A client gametest suite covering the zoom and HUD behaviour, run with
-  `./gradlew :fabric:runClientGameTest`.
+- Crash on startup if the config file was damaged.
+- Broken view when using the Back or Elastic curves at high zoom.
+- Zoom jumping outward for a moment when you let go of the key.
+- Scroll wheel not working in the inventory and chat while zoom was locked.
+- Rejoining a world while zoomed left the view stuck zoomed in.
+- F1 not hiding the zoom overlay.
+- Vanilla spyglass overlay disappearing even with the mod's spyglass zoom turned off.
+- Keybind category showing a raw name in Controls.
+- A broken character in the rangefinder text.
 
-### Known limitations
+### Note for updating
 
-- On NeoForge, "Hide Hotbar during Zoom" hides the item hotbar but not the surrounding HUD
-  decorations. NeoForge replaces that part of vanilla's HUD with its own overlay system.
-- The gametests run on Fabric only; the client gametest API has no NeoForge equivalent.
-- Quilt is not supported. Quilted Fabric API has not been updated past Minecraft 1.21, so the
-  Fabric API this mod depends on cannot be satisfied on Quilt for this Minecraft version.
+- The download is now split per loader: `zoomrgy-fabric-1.2.0.jar` and
+  `zoomrgy-neoforge-1.2.0.jar`.
+- Your settings carry over. Some old unused entries are cleaned out of `zoomrgy.json`.
+
+### Not supported
+
+- **Quilt.** Quilted Fabric API has not been updated past Minecraft 1.21.
+- On NeoForge, "Hide Hotbar during Zoom" hides the hotbar but not the health and hunger bars
+  around it.
 
 ## 1.1.0
 
