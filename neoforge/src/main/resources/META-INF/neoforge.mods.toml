@@ -8,7 +8,7 @@ modId = "zoomrgy"
 version = "${version}"
 displayName = "Zoomrgy"
 authors = "Jom3a"
-logoFile = "assets/zoomrgy/icon.png"
+iconFile = "assets/zoomrgy/icon.png"
 description = '''
 A fully-featured, highly configurable client-side zoom mod. Smooth FOV transitions with adjustable
 speed and a choice of easing curves, scroll to change magnification on the fly, a rangefinder HUD,
@@ -21,14 +21,14 @@ config = "zoomrgy.mixins.json"
 [[dependencies.zoomrgy]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.2,)"
+versionRange = "[26.3,26.4)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.zoomrgy]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.2,)"
+versionRange = "[26.3,26.4)"
 ordering = "NONE"
 side = "CLIENT"
 

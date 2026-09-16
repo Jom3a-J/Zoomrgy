@@ -1,6 +1,6 @@
 # Zoomrgy 🔍
 
-A fully-featured, high-performance, and extremely configurable client-side zoom mod for Minecraft (Fabric).
+A fully-featured, high-performance, and extremely configurable client-side zoom mod for Minecraft, on both Fabric and NeoForge.
 
 Zoomrgy provides a smooth, premium zooming experience ("Smith Zoom") featuring highly-optimized easing curves, mouse sensitivity adjustment, scroll-wheel scaling, and built-in telemetry tools like a rangefinder and target highlighter.
 
@@ -23,12 +23,22 @@ Zoomrgy provides a smooth, premium zooming experience ("Smith Zoom") featuring h
 
 To run Zoomrgy, place the compiled `.jar` file in your Minecraft `mods` folder. Make sure you have installed the following:
 
-1. **Minecraft** `26.2`
+1. **Minecraft** `26.3`
 2. **Java** `25` or newer
-3. **[Fabric Loader](https://fabricmc.net/)** (version `>=0.19.3`)
-4. **[Fabric API](https://modrinth.com/mod/fabric-api)** (version `>=0.152.0`)
-5. **[Cloth Config API](https://modrinth.com/mod/cloth-config)** (Required for the configuration UI screen)
-6. **[Mod Menu](https://modrinth.com/mod/modmenu)** (Highly recommended; provides access to the config screen GUI)
+3. **[Cloth Config API](https://modrinth.com/mod/cloth-config)** (Required for the configuration UI screen)
+
+Then, depending on your loader:
+
+**Fabric** — download `zoomrgy-fabric-[version].jar`
+
+* **[Fabric Loader](https://fabricmc.net/)** (version `>=0.19.5`)
+* **[Fabric API](https://modrinth.com/mod/fabric-api)** (version `>=0.160.0`)
+* **[Mod Menu](https://modrinth.com/mod/modmenu)** (Highly recommended; provides access to the config screen GUI)
+
+**NeoForge** — download `zoomrgy-neoforge-[version].jar`
+
+* **[NeoForge](https://neoforged.net/)** (version `26.3.0.3-beta` or newer)
+* The config screen is reachable from the gear icon in NeoForge's own mod list; Mod Menu is not needed.
 
 ---
 
@@ -138,9 +148,10 @@ Zoomrgy is built using Gradle. If you wish to build or compile the mod yourself:
    # Linux / macOS
    ./gradlew build
    ```
-4. The compiled `.jar` artifact will be located in:
+4. The compiled `.jar` artifacts are built per loader, and will be located in:
    ```
-   build/libs/zoomrgy-[version].jar
+   fabric/build/libs/zoomrgy-fabric-[version].jar
+   neoforge/build/libs/zoomrgy-neoforge-[version].jar
    ```
 
 ---

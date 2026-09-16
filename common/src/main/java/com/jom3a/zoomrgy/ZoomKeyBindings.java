@@ -3,7 +3,6 @@ package com.jom3a.zoomrgy;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class ZoomKeyBindings {
 
@@ -26,36 +25,36 @@ public class ZoomKeyBindings {
     public static void createKeyMappings() {
         ZOOM_KEY = new KeyMapping(
             "key.zoomrgy.zoom",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_C,      // Default: C
+            InputConstants.Type.KEYBOARD,
+            InputConstants.KEY_C,      // Default: C
             CATEGORY
         );
 
         ZOOM_IN_KEY = new KeyMapping(
             "key.zoomrgy.zoom_in",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_UNKNOWN, // Default: None
+            InputConstants.Type.KEYBOARD,
+            InputConstants.UNKNOWN.getValue(), // Default: None
             CATEGORY
         );
 
         ZOOM_OUT_KEY = new KeyMapping(
             "key.zoomrgy.zoom_out",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_UNKNOWN, // Default: None
+            InputConstants.Type.KEYBOARD,
+            InputConstants.UNKNOWN.getValue(), // Default: None
             CATEGORY
         );
 
         ZOOM_PRESET_2_KEY = new KeyMapping(
             "key.zoomrgy.zoom_preset_2",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_V,      // Default: V
+            InputConstants.Type.KEYBOARD,
+            InputConstants.KEY_V,      // Default: V
             CATEGORY
         );
 
         ZOOM_LOCK_KEY = new KeyMapping(
             "key.zoomrgy.zoom_lock",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_UNKNOWN, // Default: None
+            InputConstants.Type.KEYBOARD,
+            InputConstants.UNKNOWN.getValue(), // Default: None
             CATEGORY
         );
 
