@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class FogRendererMixin {
 
     @Inject(method = "setupFog", at = @At("RETURN"), cancellable = true, require = 1)
-    private static void onSetupFog(Camera camera, int fogType, DeltaTracker deltaTracker, float farPlaneDistance, ClientLevel level, CallbackInfoReturnable<FogData> info) {
+    private void onSetupFog(Camera camera, int fogType, DeltaTracker deltaTracker, float farPlaneDistance, ClientLevel level, CallbackInfoReturnable<FogData> info) {
         if (!ZoomConfig.get().reduceFog) return;
 
         double renderZoom = com.jom3a.zoomrgy.ZoomHandler.lerp(

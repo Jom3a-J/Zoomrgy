@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.3.0
+
+### Changed
+
+- Updated for **Minecraft 26.3**. This version only runs on 26.3 — stay on 1.2.0 for 26.2.
+- Minimum supported versions have moved up with it: Fabric Loader `0.19.5`, Fabric API `0.160.0`,
+  NeoForge `26.3.0.3-beta`, Cloth Config `26.3.158`. On Fabric, Mod Menu `21.0.0-beta.1` or newer.
+
+### Fixed
+
+- The mod no longer loads on a Minecraft version it was not built for. Previously it declared
+  itself compatible with anything newer than its target, so a 26.2 build would try to load on
+  26.3 and crash instead of being skipped.
+
+### Note for updating
+
+- Minecraft 26.3 changed how it reads the keyboard. Your keybinds are unaffected: zoom still
+  defaults to `C` and preset 2 to `V`, and any keys you rebound stay where you put them.
+- Your settings in `config/zoomrgy.json` carry over unchanged.
+
+### Not supported
+
+- **Quilt.** Not tested and not supported. Quilted Fabric API has not been updated past
+  Minecraft 1.21, so the usual way of getting Fabric API on Quilt is unavailable.
+- On NeoForge, "Hide Hotbar during Zoom" hides the hotbar but not the health and hunger bars
+  around it.
+
 ## 1.2.0
 
 ### New

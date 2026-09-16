@@ -34,7 +34,7 @@ fabricApi {
 }
 
 dependencies {
-	// Minecraft 26.2 ships de-obfuscated, so there is no mappings dependency and no remap step.
+	// Minecraft 26.3 ships de-obfuscated, so there is no mappings dependency and no remap step.
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"

@@ -31,7 +31,7 @@ public class ZoomrgyClientGameTest implements FabricClientGameTest {
         testEveryAnchorLandsOnScreen(context);
 
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
-            singleplayer.getClientLevel().waitForChunksRender();
+            singleplayer.getConnection().waitForChunksRender();
 
             testScrollStepsAreProportional(context);
             testScrollLevelsArePerPreset(context);
